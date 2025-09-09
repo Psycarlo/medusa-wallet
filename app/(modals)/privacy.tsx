@@ -8,7 +8,7 @@ export default function Privacy() {
     <MMainLayout>
       <MVStack itemsCenter style={{ justifyContent: 'center', height: '100%' }}>
         <Image
-          source={require('@/assets/images/medusa-logo.png')}
+          source={require('@/assets/images/medusa-logo-large.png')}
           style={{ width: 80, height: 80 }}
         />
       </MVStack>

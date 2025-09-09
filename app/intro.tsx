@@ -13,8 +13,8 @@ export default function Index() {
   return (
     <MCenter>
       <Image
-        source={require('@/assets/images/medusa-logo.png')}
-        style={{ width: 360, height: 360 }}
+        source={require('@/assets/images/medusa-logo-large.png')}
+        style={{ width: 200, height: 200 }}
       />
       <MVStack gap="2xl">
         <MVStack gap="md">
