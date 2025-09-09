@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ['master']
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: set up node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: test
+        run: pnpm test
+
+      - name: lint
+        run: pnpm lint
+
+      - name: format
+        run: pnpm format

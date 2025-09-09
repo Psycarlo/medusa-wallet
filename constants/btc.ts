@@ -1,0 +1,1 @@
+export const SATOSHIS_IN_BITCOIN = 100_000_000
