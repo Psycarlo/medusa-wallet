@@ -1,6 +1,7 @@
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native'
 
 import MText from '@/components/MText'
+
 import MHStack from './MHStack'
 
 type SSFormItemProps = {
