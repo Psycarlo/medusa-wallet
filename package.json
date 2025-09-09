@@ -1,8 +1,8 @@
 {
-  "name": "maxfy-mobile",
+  "name": "medusa-wallet",
   "version": "0.2.0",
   "repository": {
-    "url": "https://github.com/ssurfertuga/medusa-wallet",
+    "url": "https://github.com/Psycarlo/medusa-wallet",
     "type": "git"
   },
   "private": true,
