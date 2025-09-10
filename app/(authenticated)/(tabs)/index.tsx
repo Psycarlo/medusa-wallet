@@ -16,11 +16,13 @@ import MText from '@/components/MText'
 import MTransactionCard from '@/components/MTransactionCard'
 import MWalletCard from '@/components/MWalletCard'
 import MWalletCardSkeleton from '@/components/skeletons/MWalletCardSkeleton'
+import { APP_VERSION } from '@/constants/version'
 import usePaylinks from '@/hooks/query/usePaylinks'
 // import usePaginatedPayments from '@/hooks/query/usePaginatedPayments'
 import usePayments from '@/hooks/query/usePayments'
 import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
+import useGetMedusaLatestVersion from '@/hooks/useGetMedusaLatestVersion'
 import useLogout from '@/hooks/useLogout'
 import MHStack from '@/layouts/MHStack'
 import MVStack from '@/layouts/MVStack'
@@ -36,6 +38,7 @@ import { formatNumber } from '@/utils/format'
 import { withHapticsSelection } from '@/utils/haptics'
 import parse from '@/utils/parse'
 import sort from '@/utils/sort'
+import version from '@/utils/version'
 
 export default function Lightning() {
   const router = useRouter()
@@ -77,6 +80,8 @@ export default function Lightning() {
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
   const logout = useLogout()
+  const { data: medusaLatestVersion, isSuccess: medusaLatestVersionSuccess } =
+    useGetMedusaLatestVersion()
 
   const {
     data: userData,
@@ -179,6 +184,13 @@ export default function Lightning() {
       setTransactions(payments.filter(Boolean))
     }
   }, [paymentsIsSuccess, paymentsIsFetching]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!medusaLatestVersion) return
+    if (version.gt(medusaLatestVersion.replace(/^v/, ''), APP_VERSION)) {
+      toast(t('newRelease'))
+    }
+  }, [medusaLatestVersionSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     async function handleUserError() {

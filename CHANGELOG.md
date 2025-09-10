@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
 - Max length for wallet name and field hint;
 - Truncate wallet name in wallet card;
 - Add issues link in settings page;
-- Setting on show or not show percentage gain on low values.
+- Setting on show or not show percentage gain on low values;
+- Verify and notify if there is a new version/release.
 
 ### Changed
 
