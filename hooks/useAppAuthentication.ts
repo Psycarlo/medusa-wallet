@@ -44,7 +44,6 @@ function useAppAuthentication() {
   const router = useRouter()
   const pathname = usePathname()
   const lastRoute = useRef<string | null>(null)
-  const inactiveTimeout = useRef<NodeJS.Timeout | null>(null)
 
   const [pinEnabled, biometricEnabled] = useSettingsStore(
     useShallow((state) => [state.pinEnabled, state.biometricEnabled])
@@ -76,19 +75,14 @@ function useAppAuthentication() {
         (Platform.OS === 'android' && nextAppState === 'background')
       ) {
         router.replace('/(modals)/privacy') // Note: does not update app preview on android
-
-        if (inactiveTimeout.current) clearTimeout(inactiveTimeout.current)
-        inactiveTimeout.current = setTimeout(() => {
-          inactiveTimeout.current = null
-        }, GRACE_PERIOD_TIME)
       } else if (
         nextAppState === 'active' &&
         appState.current.match(/background|inactive/)
       ) {
+        const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
+
         // If back active within grace period go back to packge if camera, send or receive
-        if (inactiveTimeout.current) {
-          clearTimeout(inactiveTimeout.current)
-          inactiveTimeout.current = null
+        if (elapsed <= GRACE_PERIOD_TIME) {
           if (
             lastRoute.current &&
             ['camera', 'send', 'receive'].some((p) =>
@@ -103,8 +97,6 @@ function useAppAuthentication() {
         if (!requiresAuth) {
           router.replace('/')
         } else {
-          const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
-
           if (elapsed >= LOCK_TIME || authTriggered) {
             setAuthTriggered(true)
             if (!biometricEnabled) router.navigate('/unlock')
