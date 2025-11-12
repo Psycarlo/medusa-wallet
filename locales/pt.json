@@ -127,6 +127,7 @@
   "ok": "Ok",
   "onchainAddress": "Endereço Onchain",
   "onchainToLightning": "Onchain para Lightning",
+  "onchainToLnAddressInfo": "Vai ser usado para receber os fundos se a troca falhar",
   "otherEmail": "Outro email",
   "password": "Palavra-passe",
   "paste": "Colar",

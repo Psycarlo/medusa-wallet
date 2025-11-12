@@ -127,6 +127,7 @@
   "ok": "Ok",
   "onchainAddress": "Onchain Address",
   "onchainToLightning": "Onchain to Lightning",
+  "onchainToLnAddressInfo": "Will be used to receive funds if swap fails",
   "otherEmail": "Other email",
   "password": "Password",
   "paste": "Paste",

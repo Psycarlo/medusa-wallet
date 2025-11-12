@@ -49,10 +49,10 @@ export default function MOptionSelector({
           ]}
           onPress={() => setSelected(option.value)}
         >
-          <>
+          <MHStack style={{ justifyContent: 'flex-start' }}>
             <MText style={{ maxWidth: 120 }}>{option.label}</MText>
             {selected === option.value && <View style={styles.selected} />}
-          </>
+          </MHStack>
         </TouchableHighlight>
       ))}
     </MHStack>

@@ -3,6 +3,7 @@ import {
   type StyleProp,
   StyleSheet,
   TouchableHighlight,
+  View,
   type ViewStyle
 } from 'react-native'
 
@@ -66,7 +67,7 @@ function MButton({
       disabled={disabled}
       {...props}
     >
-      <>
+      <View style={{ alignItems: 'center' }}>
         <MText
           size={textSize === 'default' ? 'lg' : 'sm'}
           weight={variant !== 'ghost' ? 'semibold' : 'regular'}
@@ -79,7 +80,7 @@ function MButton({
           {text}
         </MText>
         {loading && <MActivityIndicator style={styles.activityIndicatorBase} />}
-      </>
+      </View>
     </TouchableHighlight>
   )
 }
