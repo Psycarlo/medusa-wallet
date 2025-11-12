@@ -129,7 +129,7 @@ export const PaylinkSchema = z.array(
   })
 )
 
-export const BoltzConfiguration = z.object({
+export const BoltzConfigurationSchema = z.object({
   'BTC/BTC': z.object({
     hash: z.string(),
     rate: z.number(),
@@ -162,4 +162,26 @@ export const BoltzConfiguration = z.object({
       })
     })
   })
+})
+
+export const SwapSchema = z.object({
+  id: z.string(),
+  wallet: z.string(),
+  asset: z.string(),
+  amount: z.number(),
+  direction: z.string(),
+  feerate: z.boolean(),
+  feerate_value: z.number(),
+  payment_hash: z.string(),
+  time: z.string().datetime(),
+  status: z.string(),
+  refund_privkey: z.string(),
+  refund_address: z.string(),
+  boltz_id: z.string(),
+  expected_amount: z.number(),
+  timeout_block_height: z.number(),
+  address: z.string(),
+  bip21: z.string(),
+  redeem_script: z.string(),
+  blinding_key: z.string()
 })

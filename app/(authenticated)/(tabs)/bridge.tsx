@@ -1,16 +1,18 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
 import { useQuery } from '@tanstack/react-query'
-import { Stack } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
 import lnbits from '@/api/lnbits'
+import History from '@/components/icons/History'
 import Pencil from '@/components/icons/Pencil'
 import MAmountDisplay, { MAmountDisplayType } from '@/components/MAmountDisplay'
 import MBottomSheet from '@/components/MBottomSheet'
 import MButton from '@/components/MButton'
 import MEmptyInputButton from '@/components/MEmptyInputButton'
+import MIconButton from '@/components/MIconButton'
 import MNumPad, { Keys } from '@/components/MNumPad'
 import MOptionSelector from '@/components/MOptionSelector'
 import MSheetSelector from '@/components/MSheetSelector'
@@ -32,6 +34,7 @@ import { formatNumber } from '@/utils/format'
 import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Bridge() {
+  const router = useRouter()
   const wallets = useWalletsStore((state) => state.wallets)
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
@@ -141,8 +144,15 @@ export default function Bridge() {
 
   return (
     <MMainLayout>
-      {/* Header left swap history here */}
-      <Stack.Screen options={{ headerLeft: undefined }} />
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <MIconButton onPress={() => router.navigate('/swaps')}>
+              <History />
+            </MIconButton>
+          )
+        }}
+      />
       <ScrollView>
         <MVStack itemsCenter gap="md">
           <MVStack itemsCenter>
