@@ -11,6 +11,7 @@ import { PAYMENTS_PER_FETCH } from '@/config/payments'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import {
   AuthSchema,
+  BoltzConfiguration,
   ConversionSchema,
   InkeyWebsocketSchema,
   InvoiceSchema,
@@ -590,6 +591,27 @@ async function payLnurl(payload: Omit<PayLnurl, 'type'>, adminkey: string) {
   return data
 }
 
+// Swaps with Boltz
+async function getBoltzConfig() {
+  const response = await fetch(`${getCurrentBaseUrl()}/boltz/api/v1/swap/boltz`)
+
+  const json = await response.json()
+
+  const { data, error } = BoltzConfiguration.safeParse(json)
+
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return data
+}
+
 export default {
   register,
   login,
@@ -608,5 +630,6 @@ export default {
   createInvoice,
   payInvoice,
   pay,
-  payLnurl
+  payLnurl,
+  getBoltzConfig
 }

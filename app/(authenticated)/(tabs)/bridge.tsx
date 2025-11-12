@@ -1,9 +1,11 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
+import { useQuery } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
 import { useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
+import lnbits from '@/api/lnbits'
 import Pencil from '@/components/icons/Pencil'
 import MAmountDisplay, { MAmountDisplayType } from '@/components/MAmountDisplay'
 import MBottomSheet from '@/components/MBottomSheet'
@@ -14,7 +16,6 @@ import MOptionSelector from '@/components/MOptionSelector'
 import MSheetSelector from '@/components/MSheetSelector'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
-import { BTC_BTC_MAX, BTC_BTC_MIN } from '@/config/swap'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MFormLayout from '@/layouts/MFormLayout'
@@ -38,6 +39,11 @@ export default function Bridge() {
   const [fiatCurrency, bitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
+
+  const { data: boltzConfig } = useQuery({
+    queryKey: ['boltz-config'],
+    queryFn: () => lnbits.getBoltzConfig()
+  })
 
   const defaultWallet = getDefaultWallet(wallets)
   const [selectedWallet, setSelectedWallet] = useState<Wallet | undefined>(
@@ -178,12 +184,16 @@ export default function Bridge() {
                 </MHStack>
               </MEmptyInputButton>
               <MHStack style={{ justifyContent: 'space-between' }}>
-                <MText size="xs" color="muted">
-                  Min: {formatNumber(BTC_BTC_MIN)}
-                </MText>
-                <MText size="xs" color="muted">
-                  Max: {formatNumber(BTC_BTC_MAX)}
-                </MText>
+                {boltzConfig && (
+                  <MText size="xs" color="muted">
+                    Min: {formatNumber(boltzConfig['BTC/BTC'].limits.minimal)}
+                  </MText>
+                )}
+                {boltzConfig && (
+                  <MText size="xs" color="muted">
+                    Max: {formatNumber(boltzConfig['BTC/BTC'].limits.maximal)}
+                  </MText>
+                )}
               </MHStack>
             </MFormLayout.Item>
             <MFormLayout.Item>

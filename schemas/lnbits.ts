@@ -128,3 +128,38 @@ export const PaylinkSchema = z.array(
     lnurl: z.string()
   })
 )
+
+export const BoltzConfiguration = z.object({
+  'BTC/BTC': z.object({
+    hash: z.string(),
+    rate: z.number(),
+    limits: z.object({
+      maximal: z.number(),
+      minimal: z.number(),
+      maximalZeroConf: z.object({
+        baseAsset: z.number(),
+        quoteAsset: z.number()
+      })
+    }),
+    fees: z.object({
+      percentageSwapIn: z.number(),
+      percentage: z.number(),
+      minerFees: z.object({
+        baseAsset: z.object({
+          normal: z.number(),
+          reverse: z.object({
+            claim: z.number(),
+            lockup: z.number()
+          })
+        }),
+        quoteAsset: z.object({
+          normal: z.number(),
+          reverse: z.object({
+            claim: z.number(),
+            lockup: z.number()
+          })
+        })
+      })
+    })
+  })
+})
