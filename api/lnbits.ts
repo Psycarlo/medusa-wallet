@@ -11,7 +11,7 @@ import { PAYMENTS_PER_FETCH } from '@/config/payments'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import {
   AuthSchema,
-  BoltzConfiguration,
+  BoltzConfigurationSchema,
   ConversionSchema,
   InkeyWebsocketSchema,
   InvoiceSchema,
@@ -19,6 +19,7 @@ import {
   PaylinkSchema,
   PaymentSchema,
   RateSchema,
+  SwapSchema,
   UserSchema,
   ValidationErrorSchema,
   WalletSchema,
@@ -597,7 +598,7 @@ async function getBoltzConfig() {
 
   const json = await response.json()
 
-  const { data, error } = BoltzConfiguration.safeParse(json)
+  const { data, error } = BoltzConfigurationSchema.safeParse(json)
 
   if (error) {
     const errorData = ValidationErrorSchema.parse(json)
@@ -610,6 +611,103 @@ async function getBoltzConfig() {
   }
 
   return data
+}
+
+async function listSwaps(adminkey: string) {
+  const response = await fetch(`${getCurrentBaseUrl()}/boltz/api/v1/swap`, {
+    headers: {
+      'x-api-key': adminkey
+    }
+  })
+  const json = await response.json()
+
+  const { data, error } = z.array(SwapSchema).safeParse(json)
+
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return data
+}
+
+async function listReverseSwaps(adminkey: string) {
+  const response = await fetch(
+    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse`,
+    {
+      headers: {
+        'x-api-key': adminkey
+      }
+    }
+  )
+  const json = await response.json()
+
+  const { data, error } = z.array(SwapSchema).safeParse(json)
+
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return data
+}
+
+type CreateSwapData = {
+  walletId: string
+  address: string
+  amount: number
+  direction: 'in' | 'out'
+}
+
+async function createSwap(data: CreateSwapData, adminkey: string) {
+  const url = `${getCurrentBaseUrl()}/boltz/api/v1/swap${data.direction === 'out' ? '/reverse' : ''}`
+
+  const body =
+    data.direction === 'out'
+      ? JSON.stringify({
+          wallet: data.walletId,
+          amount: data.amount,
+          instant_settlement: true,
+          onchain_address: data.address
+        })
+      : JSON.stringify({
+          wallet: data.walletId,
+          amount: data.amount,
+          refund_address: data.address
+        })
+
+  const response = await fetch(url, {
+    headers: {
+      ...headers,
+      'x-api-key': adminkey
+    },
+    method: 'POST',
+    body
+  })
+  const json = await response.json()
+
+  const { data: result, error } = SwapSchema.safeParse(json)
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return result
 }
 
 export default {
@@ -631,5 +729,8 @@ export default {
   payInvoice,
   pay,
   payLnurl,
-  getBoltzConfig
+  getBoltzConfig,
+  listSwaps,
+  listReverseSwaps,
+  createSwap
 }
