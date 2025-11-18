@@ -11,6 +11,7 @@ import { PAYMENTS_PER_FETCH } from '@/config/payments'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import {
   AuthSchema,
+  AutoSwapSchema,
   BoltzConfigurationSchema,
   ConversionSchema,
   InkeyWebsocketSchema,
@@ -314,6 +315,7 @@ type GetPaginatedPaymentsOptions = {
   walletId?: string
 }
 
+// TODO: Implement https://github.com/lnbits/lnbits/pull/3132
 async function getPaginatedPayments(
   inkey: string,
   {
@@ -662,7 +664,35 @@ async function listReverseSwaps(adminkey: string) {
   return data
 }
 
-type CreateSwapData = {
+async function listAutoReverseSwaps(adminkey: string) {
+  const response = await fetch(
+    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse/auto`,
+    {
+      headers: {
+        'x-api-key': adminkey
+      }
+    }
+  )
+  const json = await response.json()
+
+  const { data, error } = z.array(AutoSwapSchema).safeParse(json)
+
+  console.log(data, '<<<')
+
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return data
+}
+
+export type CreateSwapData = {
   walletId: string
   address: string
   amount: number
@@ -732,5 +762,6 @@ export default {
   getBoltzConfig,
   listSwaps,
   listReverseSwaps,
+  listAutoReverseSwaps,
   createSwap
 }
