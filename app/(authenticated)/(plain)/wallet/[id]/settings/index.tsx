@@ -129,10 +129,10 @@ export default function WalletSettings() {
       <MVStack justifyBetween>
         <MFormLayout>
           <MFormLayout.Item>
-            <MFormLayout.Label label="Name" />
+            <MFormLayout.Label label={t('name')} />
             <MTextInput
               value={newWalletName}
-              placeholder="Enter wallet name"
+              placeholder={t('enterWalletName')}
               onChangeText={(text) => handleOnChangeNewWalletNameText(text)}
             />
           </MFormLayout.Item>
@@ -147,13 +147,13 @@ export default function WalletSettings() {
         </MFormLayout>
         <MVStack>
           <MButton
-            text="Save changes"
+            text={t('saveChanges')}
             loading={updateWalletNameMutation.isPending}
             disabled={!hasChanges || !newWalletName}
             onPress={() => handleUpdateWallet()}
           />
           <MButton
-            text="Delete Wallet"
+            text={t('deleteWallet')}
             variant="danger"
             underlayColor={Colors.transparent}
             loading={deleteWalletMutation.isPending}
