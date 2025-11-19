@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
-import lnbits from '@/api/lnbits'
+import lnbits, { CreateSwapData } from '@/api/lnbits'
 import History from '@/components/icons/History'
 import Pencil from '@/components/icons/Pencil'
 import MAmountDisplay, { MAmountDisplayType } from '@/components/MAmountDisplay'
@@ -19,6 +19,7 @@ import MSheetSelector from '@/components/MSheetSelector'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
+import useCreateSwap from '@/hooks/mutation/useCreateSwap'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
@@ -31,6 +32,7 @@ import { useWalletsStore } from '@/store/wallets'
 import { Wallet } from '@/types/wallet'
 import fiatUtils from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
+import validation from '@/utils/validation'
 import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Bridge() {
@@ -53,7 +55,9 @@ export default function Bridge() {
     defaultWallet || undefined
   )
 
-  const [direction, setDirection] = useState('in')
+  const swapMutation = useCreateSwap(selectedWallet?.adminkey!)
+
+  const [direction, setDirection] = useState<CreateSwapData['direction']>('in')
   const [amount, setAmount] = useState(0)
   const [amountType, setAmountType] = useState<MAmountDisplayType>('btc')
   const [localAmount, setLocalAmount] = useState('0')
@@ -61,7 +65,12 @@ export default function Bridge() {
   const [amountOption, setAmountOption] = useState('send')
   const [address, setAddress] = useState('')
 
-  const disabled = !amount || !direction || !amountOption || !address
+  const disabled =
+    !amount ||
+    !direction ||
+    !amountOption ||
+    !address ||
+    !validation.isValidBitcoinAddress(address)
 
   const bottomSheetWalletRef = useRef<BottomSheet>(null)
   const bottomSheetAmountRef = useRef<BottomSheet>(null)
@@ -178,6 +187,19 @@ export default function Bridge() {
               </MEmptyInputButton>
             </MFormLayout.Item>
             <MFormLayout.Item>
+              <MFormLayout.Label label={t('direction')} />
+              <MOptionSelector
+                options={[
+                  { label: t('onchainToLightning'), value: 'in' },
+                  { label: t('lightningToOnchain'), value: 'out' }
+                ]}
+                selected={direction}
+                setSelected={(selected) =>
+                  setDirection(selected as CreateSwapData['direction'])
+                }
+              />
+            </MFormLayout.Item>
+            <MFormLayout.Item>
               <MFormLayout.Label label={t('amount')} />
               <MEmptyInputButton
                 showPlaceholder={!amount}
@@ -186,7 +208,9 @@ export default function Bridge() {
                 onPress={() => bottomSheetAmountRef.current?.expand()}
               >
                 <MHStack style={{ width: 'auto' }}>
-                  <MText weight="medium">{formatNumber(amount)} sats</MText>
+                  <MText weight="medium">
+                    {formatNumber(amount, 0, true)} sats
+                  </MText>
                   <MText color="muted" weight="medium">
                     {fiatUtils.getSymbol(fiatCurrency)}
                     {formatNumber(rate && amount / rate, 2)}
@@ -205,17 +229,6 @@ export default function Bridge() {
                   </MText>
                 )}
               </MHStack>
-            </MFormLayout.Item>
-            <MFormLayout.Item>
-              <MFormLayout.Label label={t('direction')} />
-              <MOptionSelector
-                options={[
-                  { label: t('onchainToLightning'), value: 'in' },
-                  { label: t('lightningToOnchain'), value: 'out' }
-                ]}
-                selected={direction}
-                setSelected={setDirection}
-              />
             </MFormLayout.Item>
             <MFormLayout.Item>
               <MFormLayout.Label label={t('amountOptions')} />
@@ -244,7 +257,19 @@ export default function Bridge() {
               </MHStack>
             </MFormLayout.Item>
           </MFormLayout>
-          <MButton text={t('createSwap')} disabled={disabled} />
+          <MButton
+            text={t('createSwap')}
+            disabled={disabled}
+            loading={swapMutation.isPending}
+            onPress={() =>
+              swapMutation.mutate({
+                address,
+                amount,
+                direction,
+                walletId: selectedWallet?.id!
+              })
+            }
+          />
         </MVStack>
       </ScrollView>
       <MBottomSheet
