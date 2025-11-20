@@ -51,7 +51,11 @@ export default function NewPin() {
     <MMainLayout withPaddingBottom>
       <Stack.Screen
         options={{
-          headerTitle: () => <MText>{t('enterNewPin')}</MText>,
+          headerTitle: () => (
+            <MText size="lg" weight="bold">
+              {t('enterNewPin')}
+            </MText>
+          ),
           ...(backIcon
             ? {
                 headerLeft: () => (
