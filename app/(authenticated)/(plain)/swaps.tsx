@@ -1,11 +1,13 @@
 import { FlashList } from '@shopify/flash-list'
+import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useRouter } from 'expo-router'
-import { ScrollView } from 'react-native-gesture-handler'
 
 import Close from '@/components/icons/Close'
+import Refresh from '@/components/icons/Refresh'
 import MIconButton from '@/components/MIconButton'
 import MSwapCard from '@/components/MSwapCard'
 import MText from '@/components/MText'
+import useDeleteAutoSwap from '@/hooks/mutation/useDeleteAutoSwap'
 import useAutoSwaps from '@/hooks/query/useAutoSwaps'
 import useSwaps from '@/hooks/query/useSwaps'
 import MMainLayout from '@/layouts/MMainLayout'
@@ -16,6 +18,7 @@ import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Swaps() {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const wallets = useWalletsStore((state) => state.wallets)
 
@@ -23,6 +26,7 @@ export default function Swaps() {
 
   const { data: swaps } = useSwaps(defaultwallet?.adminkey!)
   const { data: autoSwaps } = useAutoSwaps(defaultwallet?.adminkey!)
+  const deleteAutoSwapMutation = useDeleteAutoSwap(defaultwallet?.adminkey!)
 
   const allSwaps = [
     ...(autoSwaps?.map((s) => ({ ...s, kind: 'auto' as const })) || []),
@@ -44,10 +48,22 @@ export default function Swaps() {
             <MIconButton onPress={() => router.back()}>
               <Close />
             </MIconButton>
+          ),
+          headerRight: () => (
+            <MIconButton
+              onPress={() => {
+                queryClient.invalidateQueries({
+                  queryKey: ['swaps', 'autoSwaps']
+                })
+              }}
+            >
+              <Refresh />
+            </MIconButton>
           )
         }}
       />
       <MVStack style={{ flex: 1 }}>
+        {/* TODO Add loading */}
         <FlashList
           data={allSwaps}
           renderItem={({ item, index }) => {
@@ -64,6 +80,8 @@ export default function Swaps() {
                   address={item.onchain_address}
                   createdAt={item.time}
                   count={item.count}
+                  isDeleting={deleteAutoSwapMutation.isPending}
+                  onDelete={() => deleteAutoSwapMutation.mutate(item.id)}
                   first={index === 0}
                 />
               )

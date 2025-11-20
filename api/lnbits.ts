@@ -677,8 +677,6 @@ async function listAutoReverseSwaps(adminkey: string) {
 
   const { data, error } = z.array(AutoSwapSchema).safeParse(json)
 
-  console.log(data, '<<<')
-
   if (error) {
     const errorData = ValidationErrorSchema.parse(json)
 
@@ -713,7 +711,8 @@ async function createSwap(data: CreateSwapData, adminkey: string) {
       : JSON.stringify({
           wallet: data.walletId,
           amount: data.amount,
-          refund_address: data.address
+          refund_address: data.address,
+          feerate: true
         })
 
   const response = await fetch(url, {
@@ -740,6 +739,60 @@ async function createSwap(data: CreateSwapData, adminkey: string) {
   return result
 }
 
+export type CreateAutoSwapData = {
+  walletId: string
+  amount: number
+  address: string
+}
+
+async function createAutoSwap(data: CreateAutoSwapData, adminkey: string) {
+  const url = `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse/auto`
+
+  const response = await fetch(url, {
+    headers: {
+      ...headers,
+      'x-api-key': adminkey
+    },
+    method: 'POST',
+    body: JSON.stringify({
+      wallet: data.walletId,
+      amount: data.amount,
+      onchain_address: data.address,
+      instant_settlement: true
+    })
+  })
+  const json = await response.json()
+
+  const { data: result, error } = AutoSwapSchema.safeParse(json)
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  return result
+}
+
+async function deleteAutoSwap(id: string, adminkey: string) {
+  const url = `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse/auto/${id}`
+
+  const response = await fetch(url, {
+    headers: {
+      ...headers,
+      'x-api-key': adminkey
+    },
+    method: 'DELETE'
+  })
+
+  if (response.ok) return true
+
+  throw new Error()
+}
+
 export default {
   register,
   login,
@@ -763,5 +816,7 @@ export default {
   listSwaps,
   listReverseSwaps,
   listAutoReverseSwaps,
-  createSwap
+  createSwap,
+  createAutoSwap,
+  deleteAutoSwap
 }

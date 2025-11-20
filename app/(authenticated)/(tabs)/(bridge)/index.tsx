@@ -29,6 +29,7 @@ import { t } from '@/locales'
 import { useFiatStore } from '@/store/fiat'
 import { useSettingsStore } from '@/store/settings'
 import { useWalletsStore } from '@/store/wallets'
+import { Colors } from '@/styles'
 import { Wallet } from '@/types/wallet'
 import fiatUtils from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
@@ -152,7 +153,7 @@ export default function Bridge() {
   }
 
   return (
-    <MMainLayout>
+    <MMainLayout style={{ backgroundColor: Colors.dark }}>
       <Stack.Screen
         options={{
           headerLeft: () => (
@@ -162,18 +163,8 @@ export default function Bridge() {
           )
         }}
       />
-      <ScrollView>
+      <ScrollView style={{ marginTop: 16 }}>
         <MVStack itemsCenter gap="md">
-          <MVStack itemsCenter>
-            <MVStack gap="none">
-              <MText weight="bold" size="4xl" center>
-                {t('bridgeTitle1')}
-              </MText>
-              <MText color="bitcoin" weight="bold" size="4xl" center>
-                {t('bridgeTitle2')}
-              </MText>
-            </MVStack>
-          </MVStack>
           <MFormLayout style={{ gap: 12 }}>
             <MFormLayout.Item>
               <MFormLayout.Label label={t('lightningWallet')} />
@@ -250,11 +241,13 @@ export default function Bridge() {
                 onChangeText={(text) => setAddress(text)}
                 onBlur={() => setAddress(address.trim())}
               />
-              <MHStack style={{ justifyContent: 'flex-end' }}>
-                <MText size="xs" color="muted">
-                  {t('onchainToLnAddressInfo')}
-                </MText>
-              </MHStack>
+              {direction === 'out' && (
+                <MHStack style={{ justifyContent: 'flex-end' }}>
+                  <MText size="xs" color="muted">
+                    {t('onchainToLnAddressInfo')}
+                  </MText>
+                </MHStack>
+              )}
             </MFormLayout.Item>
           </MFormLayout>
           <MButton

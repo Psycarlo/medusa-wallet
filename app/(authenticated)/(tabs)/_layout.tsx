@@ -75,7 +75,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="bridge"
+          name="(bridge)"
           options={{
             title: t('bridge'),
             tabBarIcon: ({ focused }) => <Bridge active={focused} />
