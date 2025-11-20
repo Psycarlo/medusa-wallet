@@ -52,9 +52,8 @@ export default function Swaps() {
           headerRight: () => (
             <MIconButton
               onPress={() => {
-                queryClient.invalidateQueries({
-                  queryKey: ['swaps', 'autoSwaps']
-                })
+                queryClient.invalidateQueries({ queryKey: ['swaps'] })
+                queryClient.invalidateQueries({ queryKey: ['autoSwaps'] })
               }}
             >
               <Refresh />
