@@ -2,7 +2,7 @@
   "expo": {
     "name": "Medusa Wallet",
     "slug": "medusa-wallet",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "newArchEnabled": false,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,7 @@
       },
       "package": "bz.medusa.wallet",
       "permissions": ["android.permission.CAMERA"],
-      "versionCode": 2
+      "versionCode": 3
     },
     "androidStatusBar": {
       "barStyle": "light-content",
