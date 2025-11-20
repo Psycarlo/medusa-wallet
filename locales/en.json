@@ -60,6 +60,7 @@
   "createdAutoSwap": "Auto swap created successfully!",
   "createdSwap": "Swap created successfully!",
   "currency": "Currency",
+  "currentBlockHeight": "Current block height",
   "date": "Date",
   "deactivated": "Deactivated",
   "delete": "Delete",

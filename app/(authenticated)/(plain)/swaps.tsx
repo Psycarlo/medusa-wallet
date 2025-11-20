@@ -9,6 +9,7 @@ import MSwapCard from '@/components/MSwapCard'
 import MText from '@/components/MText'
 import useDeleteAutoSwap from '@/hooks/mutation/useDeleteAutoSwap'
 import useAutoSwaps from '@/hooks/query/useAutoSwaps'
+import useCurrentBlockHeight from '@/hooks/query/useCurrentBlockHeight'
 import useSwaps from '@/hooks/query/useSwaps'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
@@ -24,6 +25,7 @@ export default function Swaps() {
 
   const defaultwallet = getDefaultWallet(wallets)
 
+  const { data: blockHeight } = useCurrentBlockHeight()
   const { data: swaps } = useSwaps(defaultwallet?.adminkey!)
   const { data: autoSwaps } = useAutoSwaps(defaultwallet?.adminkey!)
   const deleteAutoSwapMutation = useDeleteAutoSwap(defaultwallet?.adminkey!)
@@ -52,6 +54,7 @@ export default function Swaps() {
           headerRight: () => (
             <MIconButton
               onPress={() => {
+                queryClient.invalidateQueries({ queryKey: ['block-height'] })
                 queryClient.invalidateQueries({ queryKey: ['swaps'] })
                 queryClient.invalidateQueries({ queryKey: ['autoSwaps'] })
               }}
@@ -62,6 +65,12 @@ export default function Swaps() {
         }}
       />
       <MVStack style={{ flex: 1 }}>
+        <MVStack itemsCenter gap="xs">
+          <MText color="muted">{t('currentBlockHeight')}</MText>
+          <MText size="xl" weight="semibold">
+            {blockHeight}
+          </MText>
+        </MVStack>
         {/* TODO Add loading */}
         <FlashList
           data={allSwaps}
@@ -89,7 +98,7 @@ export default function Swaps() {
             return (
               <MSwapCard
                 kind="normal"
-                direction={item.direction as 'in' | 'out'}
+                direction={item.direction === 'receive' ? 'in' : 'out'}
                 walletName={
                   wallets.find((wallet) => wallet.id === item.wallet)?.name ||
                   ''
@@ -99,6 +108,7 @@ export default function Swaps() {
                 createdAt={item.time}
                 status={item.status}
                 timeoutBlockHeight={item.timeout_block_height}
+                currentBlockHeight={blockHeight}
                 first={index === 0}
               />
             )

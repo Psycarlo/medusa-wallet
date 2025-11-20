@@ -22,6 +22,7 @@ type NormalSwapProps = {
   count?: never
   status: string
   timeoutBlockHeight: number
+  currentBlockHeight: number | undefined
   isDeleting?: never
   onDelete?: never
 }
@@ -37,6 +38,7 @@ type AutoSwapProps = {
   count: number
   status?: never
   timeoutBlockHeight?: never
+  currentBlockHeight?: never
   isDeleting?: boolean
   onDelete?: () => void
 }
@@ -53,6 +55,7 @@ export default function MSwapCard({
   count,
   status,
   timeoutBlockHeight,
+  currentBlockHeight,
   first,
   isDeleting,
   onDelete
@@ -126,7 +129,17 @@ export default function MSwapCard({
             style={{ paddingHorizontal: 16, paddingVertical: 4 }}
           >
             <MText color="muted">{t('timeoutBlockHeight')}</MText>
-            <MText weight="medium">{timeoutBlockHeight}</MText>
+            <MText
+              weight="medium"
+              color={
+                timeoutBlockHeight <= (currentBlockHeight || 0) &&
+                status === 'pending'
+                  ? 'danger'
+                  : 'white'
+              }
+            >
+              {timeoutBlockHeight}
+            </MText>
           </MHStack>
         )}
         <MHStack
