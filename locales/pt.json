@@ -18,7 +18,7 @@
   "biometric": "Biometria",
   "bitcoinUnit": "Unidade bitcoin",
   "bolt11": "Bolt11",
-  "boltzFee": "Boltz vai cobrer taxa ~%{sats} sats",
+  "boltzFee": "Boltz vai cobrer taxa ~%{sats} sats. Aplicam-se também taxas de transação.",
   "bridge": "Ponte",
   "bridgeTitle1": "Troque entre",
   "bridgeTitle2": "LN e Onchain",

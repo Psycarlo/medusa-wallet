@@ -18,7 +18,7 @@
   "biometric": "Biometric",
   "bitcoinUnit": "Bitcoin unit",
   "bolt11": "Bolt11",
-  "boltzFee": "Boltz will charge a fee ~%{sats} sats",
+  "boltzFee": "Boltz will charge a fee ~%{sats} sats. Transaction fees also apply.",
   "bridge": "Bridge",
   "bridgeTitle1": "Swap between",
   "bridgeTitle2": "LN and Onchain",

@@ -706,7 +706,9 @@ async function createSwap(data: CreateSwapData, adminkey: string) {
           wallet: data.walletId,
           amount: data.amount,
           instant_settlement: true,
-          onchain_address: data.address
+          onchain_address: data.address,
+          feerate: true,
+          direction: 'send'
         })
       : JSON.stringify({
           wallet: data.walletId,

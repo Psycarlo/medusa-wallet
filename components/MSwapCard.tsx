@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking'
 import { StyleSheet } from 'react-native'
 
 import MHStack from '@/layouts/MHStack'
@@ -15,9 +16,10 @@ import MText from './MText'
 type NormalSwapProps = {
   kind: 'normal'
   direction: 'in' | 'out'
+  address?: string
   walletName: string
   amount: number
-  expectedAmount: number
+  expectedAmount?: number
   createdAt: string
   count?: never
   status: string
@@ -32,7 +34,7 @@ type AutoSwapProps = {
   kind: 'auto'
   direction: 'out'
   walletName: string
-  address: string
+  address?: string
   amount: number
   expectedAmount?: never
   createdAt: string
@@ -51,6 +53,7 @@ export default function MSwapCard({
   kind,
   direction,
   walletName,
+  address,
   amount,
   expectedAmount,
   createdAt,
@@ -117,7 +120,7 @@ export default function MSwapCard({
           <MText color="muted">{t('amount')}</MText>
           <MText weight="medium">{formatNumber(amount)}</MText>
         </MHStack>
-        {kind === 'normal' && (
+        {kind === 'normal' && expectedAmount && (
           <MHStack
             justifyBetween
             style={{ paddingHorizontal: 16, paddingVertical: 4 }}
@@ -160,8 +163,27 @@ export default function MSwapCard({
           loading={isDeleting}
           onPress={onDelete}
         />
+      ) : direction === 'in' ? (
+        <MHStack>
+          <MButton text={t('onchainDetails')} onPress={onDetails} />
+          {address && (
+            <MButton
+              text="Mempool"
+              variant="muted"
+              onPress={() =>
+                Linking.openURL(`https://mempool.space/address/${address}`)
+              }
+            />
+          )}
+        </MHStack>
       ) : (
-        <MButton text={t('onchainDetails')} onPress={onDetails} />
+        <MButton
+          text="Mempool"
+          variant="muted"
+          onPress={() =>
+            Linking.openURL(`https://mempool.space/address/${address}`)
+          }
+        />
       )}
     </MVStack>
   )

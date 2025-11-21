@@ -172,18 +172,19 @@ export const SwapSchema = z.object({
   direction: z.string(),
   feerate: z.boolean(),
   feerate_value: z.number().nullable(),
-  payment_hash: z.string(),
+  payment_hash: z.string().optional(),
   time: z.string(),
   status: z.string(),
-  refund_privkey: z.string(),
-  refund_address: z.string(),
+  refund_privkey: z.string().optional(),
+  refund_address: z.string().optional(),
   boltz_id: z.string(),
-  expected_amount: z.number(),
+  expected_amount: z.number().optional(),
   timeout_block_height: z.number(),
-  address: z.string(),
-  bip21: z.string(),
+  address: z.string().optional(),
+  bip21: z.string().optional(),
   redeem_script: z.string(),
-  blinding_key: z.string().nullable()
+  blinding_key: z.string().nullable(),
+  lockup_address: z.string().optional()
 })
 
 export const AutoSwapSchema = z.object({

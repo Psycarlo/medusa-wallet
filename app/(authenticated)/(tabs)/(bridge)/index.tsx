@@ -241,7 +241,7 @@ export default function Bridge() {
                 onChangeText={(text) => setAddress(text)}
                 onBlur={() => setAddress(address.trim())}
               />
-              {direction === 'out' && (
+              {direction === 'in' && (
                 <MHStack style={{ justifyContent: 'flex-end' }}>
                   <MText size="xs" color="muted">
                     {t('onchainToLnAddressInfo')}

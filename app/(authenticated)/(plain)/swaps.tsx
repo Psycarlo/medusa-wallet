@@ -7,26 +7,24 @@ import { z } from 'zod'
 
 import Close from '@/components/icons/Close'
 import Refresh from '@/components/icons/Refresh'
+import MAddressCopy from '@/components/MAddressCopy'
 import MBottomSheet from '@/components/MBottomSheet'
 import MIconButton from '@/components/MIconButton'
+import MQRCode from '@/components/MQRCode'
 import MSwapCard from '@/components/MSwapCard'
 import MText from '@/components/MText'
 import useDeleteAutoSwap from '@/hooks/mutation/useDeleteAutoSwap'
 import useAutoSwaps from '@/hooks/query/useAutoSwaps'
 import useCurrentBlockHeight from '@/hooks/query/useCurrentBlockHeight'
 import useSwaps from '@/hooks/query/useSwaps'
+import MFormLayout from '@/layouts/MFormLayout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
 import { SwapSchema } from '@/schemas/lnbits'
 import { useWalletsStore } from '@/store/wallets'
-import { getDefaultWallet } from '@/utils/wallet'
-import MQRCode from '@/components/MQRCode'
-import MFormLayout from '@/layouts/MFormLayout'
-import MAddressCopy from '@/components/MAddressCopy'
 import { formatNumber } from '@/utils/format'
-import { View } from 'react-native'
-import { Colors } from '@/styles'
+import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Swaps() {
   const router = useRouter()
@@ -124,6 +122,7 @@ export default function Swaps() {
                   ''
                 }
                 amount={item.amount}
+                address={item.address || item.lockup_address}
                 expectedAmount={item.expected_amount}
                 createdAt={item.time}
                 status={item.status}
@@ -155,22 +154,24 @@ export default function Swaps() {
                   {t('timeoutReached')}
                 </MText>
               )}
-            {selectedSwap && <MQRCode value={selectedSwap.address} />}
-            <MText color="muted" size="sm">
-              {t('boltzFee', {
-                sats: selectedSwap.expected_amount - selectedSwap.amount
-              })}
-            </MText>
+            {selectedSwap && <MQRCode value={selectedSwap.address || ''} />}
+            {selectedSwap.expected_amount && (
+              <MText color="muted" size="sm">
+                {t('boltzFee', {
+                  sats: selectedSwap.expected_amount - selectedSwap.amount
+                })}
+              </MText>
+            )}
             <MFormLayout>
               <MFormLayout.Item>
                 <MFormLayout.Label label={t('expectedAmount')} />
                 <MAddressCopy
-                  address={formatNumber(selectedSwap.expected_amount)}
+                  address={formatNumber(selectedSwap.expected_amount || 0)}
                 />
               </MFormLayout.Item>
               <MFormLayout.Item>
                 <MFormLayout.Label label={t('onchainAddress')} />
-                <MAddressCopy address={selectedSwap.address} />
+                <MAddressCopy address={selectedSwap.address || ''} />
               </MFormLayout.Item>
             </MFormLayout>
           </MVStack>
