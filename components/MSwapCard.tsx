@@ -25,6 +25,7 @@ type NormalSwapProps = {
   currentBlockHeight: number | undefined
   isDeleting?: never
   onDelete?: never
+  onDetails?: () => void
 }
 
 type AutoSwapProps = {
@@ -41,6 +42,7 @@ type AutoSwapProps = {
   currentBlockHeight?: never
   isDeleting?: boolean
   onDelete?: () => void
+  onDetails?: never
 }
 
 type MSwapCardProps = (NormalSwapProps | AutoSwapProps) & { first?: boolean }
@@ -58,7 +60,8 @@ export default function MSwapCard({
   currentBlockHeight,
   first,
   isDeleting,
-  onDelete
+  onDelete,
+  onDetails
 }: MSwapCardProps) {
   return (
     <MVStack style={[styles.cardBase, first ? { marginTop: 10 } : {}]}>
@@ -158,7 +161,7 @@ export default function MSwapCard({
           onPress={onDelete}
         />
       ) : (
-        <MButton text={t('onchainDetails')} />
+        <MButton text={t('onchainDetails')} onPress={onDetails} />
       )}
     </MVStack>
   )

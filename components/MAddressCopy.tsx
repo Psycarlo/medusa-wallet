@@ -26,7 +26,7 @@ export default function MAddressCopy({
 
   async function handleClick() {
     if (!address) return
-    await Clipboard.setStringAsync(address)
+    await Clipboard.setStringAsync(address.replace(/,\s*/g, ''))
     setCopied(true)
     setTimeout(() => setCopied(false), 1200)
   }
