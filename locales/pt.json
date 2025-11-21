@@ -71,6 +71,7 @@
   "deleteWalletPrompt": "Tem a certeza que quer eliminar a carteira?",
   "description": "Descrição",
   "direction": "Direção",
+  "dismiss": "Ignorar",
   "display": "Visualização",
   "displayLowValuePercentage": "Mostrar % de ganhos/perdas pequenas",
   "done": "Feito",

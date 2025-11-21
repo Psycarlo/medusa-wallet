@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - New feature: swaps and auto swaps;
+- Button to download and dismiss on the latest version toast;
 - Internationalization strings for wallet settings page.
 
 ### Fixed

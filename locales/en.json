@@ -71,6 +71,7 @@
   "deleteWalletPrompt": "Are you sure you want to delete this wallet?",
   "description": "Description",
   "direction": "Direction",
+  "dismiss": "Dismiss",
   "display": "Display",
   "displayLowValuePercentage": "Show % for small gains/losses",
   "done": "Done",

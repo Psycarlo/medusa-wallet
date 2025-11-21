@@ -1,5 +1,6 @@
 import { FlashList } from '@shopify/flash-list'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { useEffect, useMemo, useRef } from 'react'
 import { RefreshControl, ScrollView } from 'react-native'
@@ -30,6 +31,7 @@ import { t } from '@/locales'
 import { useAuthStore } from '@/store/auth'
 import { useFiatStore } from '@/store/fiat'
 import { useSettingsStore } from '@/store/settings'
+import { useVersionStore } from '@/store/version'
 import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import { mainLayoutPaddingHorizontal } from '@/styles/layout'
@@ -76,6 +78,9 @@ export default function Lightning() {
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)
   const [rate, setRate] = useFiatStore(
     useShallow((state) => [state.rate, state.setRate])
+  )
+  const [dismissedVersions, addDismissedVersion] = useVersionStore(
+    useShallow((state) => [state.dismissedVersions, state.addDismissedVersion])
   )
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
@@ -187,8 +192,27 @@ export default function Lightning() {
 
   useEffect(() => {
     if (!medusaLatestVersion) return
-    if (version.gt(medusaLatestVersion.replace(/^v/, ''), APP_VERSION)) {
-      toast(t('newRelease'))
+    const latestVersion = medusaLatestVersion.replace(/^v/, '')
+    if (
+      version.gt(latestVersion, APP_VERSION) &&
+      !dismissedVersions.includes(latestVersion)
+    ) {
+      const id = toast(t('newRelease'), {
+        action: {
+          label: 'Download',
+          onClick: () => {
+            addDismissedVersion(latestVersion)
+            Linking.openURL('https://medusa.bz')
+          }
+        },
+        cancel: {
+          label: t('dismiss'),
+          onClick: () => {
+            addDismissedVersion(latestVersion)
+            toast.dismiss(id)
+          }
+        }
+      })
     }
   }, [medusaLatestVersionSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
 
