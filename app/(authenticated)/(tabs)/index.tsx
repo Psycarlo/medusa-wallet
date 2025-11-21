@@ -144,7 +144,9 @@ export default function Lightning() {
       for (const wallet of userData.wallets) {
         if (!wsSubscriptions.current.has(wallet.inkey)) {
           const ws = lnbits.subscribeInkeyWs(wallet.inkey, (amount) => {
-            toast.success(`+${formatNumber(amount)} sats!`)
+            toast.success(
+              `${amount > 0 ? '+' : ''}${formatNumber(amount)} sats!`
+            )
             queryClient.invalidateQueries({ queryKey: ['user'] })
             queryClient.invalidateQueries({ queryKey: ['payments'] })
             queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })

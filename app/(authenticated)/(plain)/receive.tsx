@@ -154,7 +154,7 @@ export default function Receive() {
       setQrCodeValue(response.bolt11)
       setAddressCopyType('invoice')
       lnbits.subscribePaymentWs(response.payment_hash, () => {
-        toast.success(`+${formatNumber(amount)} sats!`)
+        toast.success(`${amount > 0 ? '+' : ''}${formatNumber(amount)} sats!`)
         queryClient.invalidateQueries({ queryKey: ['user'] })
         queryClient.invalidateQueries({ queryKey: ['payments'] })
         queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })
