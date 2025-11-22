@@ -616,11 +616,14 @@ async function getBoltzConfig() {
 }
 
 async function listSwaps(adminkey: string) {
-  const response = await fetch(`${getCurrentBaseUrl()}/boltz/api/v1/swap`, {
-    headers: {
-      'x-api-key': adminkey
+  const response = await fetch(
+    `${getCurrentBaseUrl()}/boltz/api/v1/swap?all_wallets=true`,
+    {
+      headers: {
+        'x-api-key': adminkey
+      }
     }
-  })
+  )
   const json = await response.json()
 
   const { data, error } = z.array(SwapSchema).safeParse(json)
@@ -640,7 +643,7 @@ async function listSwaps(adminkey: string) {
 
 async function listReverseSwaps(adminkey: string) {
   const response = await fetch(
-    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse`,
+    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse?all_wallets=true`,
     {
       headers: {
         'x-api-key': adminkey
@@ -666,7 +669,7 @@ async function listReverseSwaps(adminkey: string) {
 
 async function listAutoReverseSwaps(adminkey: string) {
   const response = await fetch(
-    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse/auto`,
+    `${getCurrentBaseUrl()}/boltz/api/v1/swap/reverse/auto?all_wallets=true`,
     {
       headers: {
         'x-api-key': adminkey
