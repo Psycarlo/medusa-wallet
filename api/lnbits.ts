@@ -695,6 +695,7 @@ export type CreateSwapData = {
   address: string
   amount: number
   direction: 'in' | 'out'
+  amountOption: 'send' | 'receive'
 }
 
 async function createSwap(data: CreateSwapData, adminkey: string) {
@@ -707,14 +708,14 @@ async function createSwap(data: CreateSwapData, adminkey: string) {
           amount: data.amount,
           instant_settlement: true,
           onchain_address: data.address,
-          feerate: true,
-          direction: 'send'
+          feerate: false,
+          direction: data.amountOption
         })
       : JSON.stringify({
           wallet: data.walletId,
           amount: data.amount,
           refund_address: data.address,
-          feerate: true
+          feerate: false
         })
 
   const response = await fetch(url, {

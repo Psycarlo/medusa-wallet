@@ -63,7 +63,8 @@ export default function Bridge() {
   const [amountType, setAmountType] = useState<MAmountDisplayType>('btc')
   const [localAmount, setLocalAmount] = useState('0')
   const [localFiat, setLocalFiat] = useState('0')
-  const [amountOption, setAmountOption] = useState('send')
+  const [amountOption, setAmountOption] =
+    useState<CreateSwapData['amountOption']>('send')
   const [address, setAddress] = useState('')
 
   const disabled =
@@ -229,7 +230,9 @@ export default function Bridge() {
                   { label: t('receiveSpecifiedAmount'), value: 'receive' }
                 ]}
                 selected={amountOption}
-                setSelected={setAmountOption}
+                setSelected={(selected) =>
+                  setAmountOption(selected as CreateSwapData['amountOption'])
+                }
               />
             </MFormLayout.Item>
             <MFormLayout.Item>
@@ -259,6 +262,7 @@ export default function Bridge() {
                 address,
                 amount,
                 direction,
+                amountOption: amountOption,
                 walletId: selectedWallet?.id!
               })
             }
