@@ -2,6 +2,7 @@ import { Redirect, Tabs, useRouter } from 'expo-router'
 import { View } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
+import Bridge from '@/components/icons/Bridge'
 import CreditCard from '@/components/icons/CreditCard'
 import Scan from '@/components/icons/Scan'
 import Settings from '@/components/icons/Settings'
@@ -71,6 +72,13 @@ export default function TabsLayout() {
           options={{
             title: t('buySats'),
             tabBarIcon: ({ focused }) => <CreditCard active={focused} />
+          }}
+        />
+        <Tabs.Screen
+          name="(bridge)"
+          options={{
+            title: t('bridge'),
+            tabBarIcon: ({ focused }) => <Bridge active={focused} />
           }}
         />
       </Tabs>

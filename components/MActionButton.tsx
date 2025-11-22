@@ -21,9 +21,9 @@ export default function MActionButton({
       style={styles.buttonBase}
       {...props}
     >
-      <MHStack style={{ gap: 6 }}>
+      <MHStack style={{ gap: 4 }}>
         {children}
-        <MText size="lg" weight="semibold">
+        <MText size="md" weight="semibold" numberOfLines={1}>
           {text}
         </MText>
       </MHStack>

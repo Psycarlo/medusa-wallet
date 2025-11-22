@@ -104,7 +104,6 @@ export default function Buy() {
   //     customerEmail: string
   //   }) => maxfy.createCheckout(url, txid, stripePrice, customerEmail),
   //   onSuccess: (data) => {
-  //     console.log('Data:', data)
   //     setHtml(data)
   //     setCheckoutOpened(true)
   //   }

@@ -128,3 +128,73 @@ export const PaylinkSchema = z.array(
     lnurl: z.string()
   })
 )
+
+export const BoltzConfigurationSchema = z.object({
+  'BTC/BTC': z.object({
+    hash: z.string(),
+    rate: z.number(),
+    limits: z.object({
+      maximal: z.number(),
+      minimal: z.number(),
+      maximalZeroConf: z.object({
+        baseAsset: z.number(),
+        quoteAsset: z.number()
+      })
+    }),
+    fees: z.object({
+      percentageSwapIn: z.number(),
+      percentage: z.number(),
+      minerFees: z.object({
+        baseAsset: z.object({
+          normal: z.number(),
+          reverse: z.object({
+            claim: z.number(),
+            lockup: z.number()
+          })
+        }),
+        quoteAsset: z.object({
+          normal: z.number(),
+          reverse: z.object({
+            claim: z.number(),
+            lockup: z.number()
+          })
+        })
+      })
+    })
+  })
+})
+
+export const SwapSchema = z.object({
+  id: z.string(),
+  wallet: z.string(),
+  asset: z.string(),
+  amount: z.number(),
+  direction: z.string(),
+  feerate: z.boolean(),
+  feerate_value: z.number().nullable(),
+  payment_hash: z.string().optional(),
+  time: z.string(),
+  status: z.string(),
+  refund_privkey: z.string().optional(),
+  refund_address: z.string().optional(),
+  boltz_id: z.string(),
+  expected_amount: z.number().optional(),
+  timeout_block_height: z.number(),
+  address: z.string().optional(),
+  bip21: z.string().optional(),
+  redeem_script: z.string(),
+  blinding_key: z.string().nullable(),
+  lockup_address: z.string().optional()
+})
+
+export const AutoSwapSchema = z.object({
+  id: z.string(),
+  wallet: z.string(),
+  asset: z.string(),
+  amount: z.number(),
+  feerate_limit: z.number().nullable(),
+  balance: z.number().nullable(),
+  onchain_address: z.string(),
+  time: z.string(),
+  count: z.number()
+})

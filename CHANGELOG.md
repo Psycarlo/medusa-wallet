@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.3.0
+
+### Added
+
+- New feature: swaps and auto swaps;
+- Button to download and dismiss on the latest version toast;
+- Internationalization strings for wallet settings page.
+
+### Fixed
+
+- Match title styles on all pages;
+- Text nowrap on MActionButton.
+
 ## v0.2.0
 
 ### Added

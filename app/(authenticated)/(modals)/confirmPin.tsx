@@ -63,7 +63,11 @@ export default function ConfirmPin() {
     <MMainLayout withPaddingBottom>
       <Stack.Screen
         options={{
-          headerTitle: () => <MText>{t('enterPinAgain')}</MText>,
+          headerTitle: () => (
+            <MText size="lg" weight="bold">
+              {t('enterPinAgain')}
+            </MText>
+          ),
           headerLeft: () => (
             <MIconButton onPress={() => router.back()}>
               <Back />
