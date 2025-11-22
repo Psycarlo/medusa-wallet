@@ -8,10 +8,10 @@ function useDeleteAutoSwap(adminkey: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationKey: ['createSwap'],
+    mutationKey: ['deleteAutoSwap'],
     mutationFn: (id: string) => lnbits.deleteAutoSwap(id, adminkey),
     onSuccess: () => {
-      toast.success(t('createdAutoSwap'))
+      toast.success(t('deletedAutoSwap'))
       queryClient.invalidateQueries({ queryKey: ['autoSwaps'] })
     },
     onError: () => {
