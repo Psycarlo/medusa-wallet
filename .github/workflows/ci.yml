@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  pull_request:
-    branches: ['master']
+  - push
+  - pull_request
 
 jobs:
   ci:
@@ -21,6 +21,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: test
         run: pnpm test

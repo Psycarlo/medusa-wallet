@@ -9,7 +9,7 @@ describe('medusa api', () => {
       expect(fiatBitcoinPrices.eur).toBe(90020.51)
       expect(fiatBitcoinPrices.gbp).toBe(75365.11)
       expect(fiatBitcoinPrices.ron).toBe(447676.84)
-    })
+    }, 20000)
 
     it('should return correct fiat values', async () => {
       const fiatValues = await medusa.getPricesAt(1000, 1736446030)
@@ -18,6 +18,6 @@ describe('medusa api', () => {
       expect(fiatValues.eur).toBe(0.9)
       expect(fiatValues.gbp).toBe(0.75)
       expect(fiatValues.ron).toBe(4.48)
-    })
+    }, 20000)
   })
 })

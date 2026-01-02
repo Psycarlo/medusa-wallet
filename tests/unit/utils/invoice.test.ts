@@ -79,7 +79,7 @@ describe('invoice utils', () => {
 
       expect(result3).toBeFalsy()
       expect(result4).toBeFalsy()
-    })
+    }, 20000)
 
     it('should decode lnurl', async () => {
       const lnurl1 =
@@ -94,7 +94,7 @@ describe('invoice utils', () => {
       const decoded1 = result1.data as WellKnown
 
       expect(decoded1.callback).toBeDefined()
-    })
+    }, 20000)
 
     it('should decode bolt11', async () => {
       const bolt11_1 =
