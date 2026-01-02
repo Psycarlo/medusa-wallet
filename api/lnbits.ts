@@ -36,8 +36,6 @@ import { tryCatch } from '@/utils/tryCatch'
 
 import medusa from './medusa'
 
-export const BASE_URL = 'https://wallet.medusa.bz'
-
 const headers = { 'Content-Type': 'application/json' }
 
 function getCurrentBaseUrl() {
