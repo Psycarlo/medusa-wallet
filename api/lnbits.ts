@@ -240,7 +240,7 @@ async function rate(fiat: SupportedFiatCurrencies) {
 
     return result.data.rate
   } catch (_error) {
-    //
+    return 0
   }
 }
 
