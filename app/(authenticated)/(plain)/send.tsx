@@ -2,7 +2,7 @@ import BottomSheet from '@gorhom/bottom-sheet'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { TouchableHighlight } from 'react-native'
-import { sha256 } from 'react-native-sha256'
+import * as Crypto from 'expo-crypto'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -110,7 +110,7 @@ export default function Send() {
 
       setRecipient(foundIdentifier || '?')
       setDescription(foundDescription || '?')
-      const dHash = await sha256(foundDescription || '')
+      const dHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, foundDescription || '')
       setDescriptionHash(dHash)
       setMinSendable(decodedInvoice.data.minSendable || 0)
       setMaxSendable(decodedInvoice.data.maxSendable || 0)
