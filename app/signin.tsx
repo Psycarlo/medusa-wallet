@@ -2,6 +2,7 @@ import BottomSheet from '@gorhom/bottom-sheet'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -10,7 +11,6 @@ import MButton from '@/components/MButton'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import LnbitsUrl from '@/components/sheets/LnbitsUrl'
-import MCenter from '@/layouts/MCenter'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
@@ -54,85 +54,97 @@ export default function Signin() {
   return (
     <>
       <MMainLayout>
-        <MCenter>
-          <MVStack gap="2xl">
-            <MVStack gap="md">
-              <MVStack gap="none">
-                <MText weight="bold" size="4xl" center>
-                  {t('signinTitle1')}
-                </MText>
-                <MText color="bitcoin" weight="bold" size="4xl" center>
-                  {t('signinTitle2')}
-                </MText>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <MVStack gap="2xl">
+              <MVStack gap="md">
+                <MVStack gap="none">
+                  <MText weight="bold" size="4xl" center>
+                    {t('signinTitle1')}
+                  </MText>
+                  <MText color="bitcoin" weight="bold" size="4xl" center>
+                    {t('signinTitle2')}
+                  </MText>
+                </MVStack>
+                <MVStack gap="none">
+                  <MText color="muted" center>
+                    {t('signinDescription1')}
+                  </MText>
+                  <MText color="muted" center>
+                    {t('signinDescription2')}
+                  </MText>
+                </MVStack>
               </MVStack>
+              <MFormLayout>
+                <MFormLayout.Item>
+                  <MFormLayout.Label label={t('identifier')} />
+                  <MTextInput
+                    value={identifier}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    placeholder={t('enterIdentifier')}
+                    onChangeText={(text) => setIdentifier(text)}
+                    onBlur={() => setIdentifier(identifier.trim())}
+                  />
+                </MFormLayout.Item>
+                <MFormLayout.Item>
+                  <MFormLayout.Label label={t('password')} />
+                  <MTextInput
+                    secureTextEntry
+                    autoCapitalize="none"
+                    placeholder={t('enterAPassword')}
+                    onChangeText={(text) => setPassword(text)}
+                  />
+                </MFormLayout.Item>
+                <MFormLayout.Item>
+                  <MHStack justifyBetween style={{ paddingHorizontal: 8 }}>
+                    <MText color="muted" size="sm">
+                      {t('dontHaveAnAccount')}
+                    </MText>
+                    <MText
+                      color="bitcoin"
+                      size="sm"
+                      weight="medium"
+                      center
+                      onPress={() => router.navigate('/signup')}
+                    >
+                      {t('signUp')}
+                    </MText>
+                  </MHStack>
+                </MFormLayout.Item>
+              </MFormLayout>
+              <MButton
+                text={t('signIn')}
+                loading={loginMutation.isPending}
+                onPress={() => loginMutation.mutate()}
+              />
               <MVStack gap="none">
-                <MText color="muted" center>
-                  {t('signinDescription1')}
+                <MText color="muted" size="sm" center>
+                  {t('changeLnbitsUrlQuestion')}
                 </MText>
-                <MText color="muted" center>
-                  {t('signinDescription2')}
+                <MText
+                  color="bitcoin"
+                  size="sm"
+                  weight="medium"
+                  center
+                  onPress={handleBottomSheetLnbitsUrlOpen}
+                >
+                  {t('changeLnbitsUrl')}
                 </MText>
               </MVStack>
             </MVStack>
-            <MFormLayout>
-              <MFormLayout.Item>
-                <MFormLayout.Label label={t('identifier')} />
-                <MTextInput
-                  value={identifier}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  placeholder={t('enterIdentifier')}
-                  onChangeText={(text) => setIdentifier(text)}
-                  onBlur={() => setIdentifier(identifier.trim())}
-                />
-              </MFormLayout.Item>
-              <MFormLayout.Item>
-                <MFormLayout.Label label={t('password')} />
-                <MTextInput
-                  secureTextEntry
-                  autoCapitalize="none"
-                  placeholder={t('enterAPassword')}
-                  onChangeText={(text) => setPassword(text)}
-                />
-              </MFormLayout.Item>
-              <MFormLayout.Item>
-                <MHStack justifyBetween style={{ paddingHorizontal: 8 }}>
-                  <MText color="muted" size="sm">
-                    {t('dontHaveAnAccount')}
-                  </MText>
-                  <MText
-                    color="bitcoin"
-                    size="sm"
-                    weight="medium"
-                    center
-                    onPress={() => router.navigate('/signup')}
-                  >
-                    {t('signUp')}
-                  </MText>
-                </MHStack>
-              </MFormLayout.Item>
-            </MFormLayout>
-            <MButton
-              text={t('signIn')}
-              loading={loginMutation.isPending}
-              onPress={() => loginMutation.mutate()}
-            />
-            <MVStack gap="none">
-              <MText color="muted" size="sm" center>
-                {t('changeLnbitsUrlQuestion')}
-              </MText>
-              <MText
-                color="bitcoin"
-                size="sm"
-                weight="medium"
-                center
-                onPress={handleBottomSheetLnbitsUrlOpen}
-              >
-                {t('changeLnbitsUrl')}
-              </MText>
-            </MVStack>
-          </MVStack>
-        </MCenter>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </MMainLayout>
       <LnbitsUrl ref={bottomSheetLnbitsUrlRef} />
     </>
