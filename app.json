@@ -3,7 +3,7 @@
     "name": "Medusa Wallet",
     "slug": "medusa-wallet",
     "version": "0.3.0",
-    "newArchEnabled": false,
+
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "medusa",
@@ -18,7 +18,9 @@
         "backgroundColor": "#0A0A0A"
       },
       "package": "bz.medusa.wallet",
-      "permissions": ["android.permission.CAMERA"],
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
       "versionCode": 3
     },
     "androidStatusBar": {
@@ -64,10 +66,24 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "useHermesV1": false
+          },
+          "ios": {
+            "buildReactNativeFromSource": true,
+            "useHermesV1": true
+          }
+        }
+      ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {
