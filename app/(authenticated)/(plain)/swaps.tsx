@@ -133,7 +133,6 @@ export default function Swaps() {
               />
             )
           }}
-          estimatedItemSize={20}
           ListEmptyComponent={() => (
             <MText color="muted" center>
               {t('noSwaps')}

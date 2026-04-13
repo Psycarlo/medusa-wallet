@@ -324,7 +324,7 @@ async function getPaginatedPayments(
     walletId = undefined
   }: GetPaginatedPaymentsOptions = {},
   snapshots: Record<string, FiatSnapshot> = {},
-  addSnapshot: (timestamp: string, snapshot: FiatSnapshot) => void
+  addSnapshot: (timestamp: string, snapshot: FiatSnapshot) => void = () => {}
 ) {
   const url = new URL(`${getCurrentBaseUrl()}/api/v1/payments`)
   url.searchParams.append('status', 'success')
