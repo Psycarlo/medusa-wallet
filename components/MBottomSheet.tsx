@@ -52,6 +52,8 @@ function MBottomSheet(
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
         enablePanDownToClose
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         backgroundStyle={{ backgroundColor: Colors.grayDarkest }}
         handleStyle={{ display: 'none' }}
         onChange={(index) => {

@@ -1,3 +1,4 @@
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
 import { type ForwardedRef, forwardRef, useMemo, useState } from 'react'
 import {
   type StyleProp,
@@ -13,12 +14,15 @@ import { Colors, Typography } from '@/styles'
 import Eye from './icons/Eye'
 import EyeOff from './icons/EyeOff'
 
-type MTextInputProps = React.ComponentPropsWithoutRef<typeof TextInput>
+type MTextInputProps = React.ComponentPropsWithoutRef<typeof TextInput> & {
+  bottomSheet?: boolean
+}
 
 function MTextInput(
-  { style, secureTextEntry, maxLength, ...props }: MTextInputProps,
+  { style, secureTextEntry, maxLength, bottomSheet, ...props }: MTextInputProps,
   ref: ForwardedRef<TextInput>
 ) {
+  const Input = bottomSheet ? BottomSheetTextInput : TextInput
   const [isSecure, setIsSecure] = useState(!!secureTextEntry)
 
   const textInputStyle = useMemo<StyleProp<TextStyle>>(() => {
@@ -32,8 +36,8 @@ function MTextInput(
 
   return (
     <View style={styles.containerBase}>
-      <TextInput
-        ref={ref}
+      <Input
+        ref={ref as any}
         secureTextEntry={isSecure}
         maxLength={maxLength}
         placeholderTextColor={Colors.grayDark}

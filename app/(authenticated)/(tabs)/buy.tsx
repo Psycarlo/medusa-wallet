@@ -257,6 +257,7 @@ export default function Buy() {
           />
           {selectedEmailType === 'other' && (
             <MTextInput
+              bottomSheet
               ref={otherEmailRef}
               value={otherEmail}
               placeholder={t('otherEmail')}

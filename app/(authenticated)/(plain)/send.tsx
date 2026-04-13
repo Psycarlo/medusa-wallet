@@ -1,8 +1,8 @@
 import BottomSheet from '@gorhom/bottom-sheet'
+import * as Crypto from 'expo-crypto'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { TouchableHighlight } from 'react-native'
-import * as Crypto from 'expo-crypto'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -110,7 +110,10 @@ export default function Send() {
 
       setRecipient(foundIdentifier || '?')
       setDescription(foundDescription || '?')
-      const dHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, foundDescription || '')
+      const dHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        foundDescription || ''
+      )
       setDescriptionHash(dHash)
       setMinSendable(decodedInvoice.data.minSendable || 0)
       setMaxSendable(decodedInvoice.data.maxSendable || 0)
@@ -405,7 +408,10 @@ export default function Send() {
       <MBottomSheet ref={commentBottomSheetRef} title={t('commentDescription')}>
         <MFormLayout style={{ gap: 12 }}>
           <MFormLayout.Item>
-            <MTextInput onChangeText={(text) => setLocalComment(text)} />
+            <MTextInput
+              bottomSheet
+              onChangeText={(text) => setLocalComment(text)}
+            />
             <MText center size="sm" color="muted">
               {t('commentAllowedCharacters', { chars: maxComment })}
             </MText>

@@ -373,6 +373,7 @@ export default function Receive() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item>
             <MTextInput
+              bottomSheet
               ref={sheetCommentRef}
               value={localComment}
               placeholder={t('commentDescription')}
