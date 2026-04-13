@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react'
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { mainLayoutPaddingHorizontal } from '@/styles/layout'
 
@@ -14,16 +15,18 @@ function MMainLayout({
   style,
   children
 }: MMainLayoutProps) {
+  const insets = useSafeAreaInsets()
+
   const containerStyles = useMemo<StyleProp<ViewStyle>>(() => {
     return StyleSheet.compose(
       {
         ...styles.containerBase,
         ...(withPaddingTop ? styles.withPaddingTop : {}),
-        ...(withPaddingBottom ? styles.withPaddingBottom : {})
+        ...(withPaddingBottom ? { paddingBottom: 32 + insets.bottom } : {})
       },
       [style]
     )
-  }, [withPaddingTop, withPaddingBottom, style])
+  }, [withPaddingTop, withPaddingBottom, style, insets.bottom])
 
   return <View style={containerStyles}>{children}</View>
 }
