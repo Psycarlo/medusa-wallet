@@ -7,7 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Migrate from `expo v53` to `expo v55`;
-- Migrate from `react-native-sha256` to `expo-crypto`.
+- Migrate from `react-native-sha256` to `expo-crypto`;
+- Implement missing biometric logic.
 
 ### Fixed
 
