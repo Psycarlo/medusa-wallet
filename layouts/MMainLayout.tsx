@@ -22,7 +22,7 @@ function MMainLayout({
       {
         ...styles.containerBase,
         ...(withPaddingTop ? styles.withPaddingTop : {}),
-        ...(withPaddingBottom ? { paddingBottom: 32 + insets.bottom } : {})
+        ...(withPaddingBottom ? { paddingBottom: insets.bottom } : {})
       },
       [style]
     )

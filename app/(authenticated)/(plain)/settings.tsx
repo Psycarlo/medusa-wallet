@@ -148,7 +148,7 @@ export default function Settings() {
           }}
         />
         <ScrollView>
-          <MVStack gap="md">
+          <MVStack gap="md" style={{ paddingBottom: 16 }}>
             <MSettingsCard title={t('account')}>
               <MSettingsCard.Item>
                 <MSettingsCard.Label
