@@ -34,8 +34,6 @@ export default function WalletSettings() {
 
   const { data: userData } = useUser(accessToken)
   const wallet = userData?.wallets.find((w) => w.id === id)
-  const wallets = userData?.wallets ?? []
-
   const [newWalletName, setNewWalletName] = useState(wallet?.name || '')
   const [walletColorId, setWalletColorId] = useState(
     (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
@@ -45,8 +43,8 @@ export default function WalletSettings() {
   const [hasColorChanged, setHasColorChanged] = useState(false)
 
   const isDefaultWallet = useMemo(
-    () => getIsDefaultWallet(id, wallets),
-    [id, wallets]
+    () => getIsDefaultWallet(id, userData?.wallets ?? []),
+    [id, userData?.wallets]
   )
 
   const updateWalletNameMutation = useMutation({

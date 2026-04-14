@@ -44,10 +44,7 @@ export default function Wallet() {
 
   const { data: rate } = useRate()
 
-  const { data: payments } = usePayments(
-    wallet ? [wallet.inkey] : [],
-    !!wallet
-  )
+  const { data: payments } = usePayments(wallet ? [wallet.inkey] : [], !!wallet)
   const transactions = payments?.[0] ?? []
 
   // Update color on wallets created in lnbits dashboard

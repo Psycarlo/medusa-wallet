@@ -237,7 +237,9 @@ export default function Lightning() {
                   const latestTransaction =
                     walletTransactions.length > 0
                       ? walletTransactions.reduce((latest, current) =>
-                          current.timestamp > latest.timestamp ? current : latest
+                          current.timestamp > latest.timestamp
+                            ? current
+                            : latest
                         ).timestamp
                       : 0
 

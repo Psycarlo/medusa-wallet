@@ -3,14 +3,14 @@ import { Redirect, useLocalSearchParams } from 'expo-router'
 import Inbound from '@/components/icons/Inbound'
 import Outbound from '@/components/icons/Outbound'
 import MText from '@/components/MText'
+import usePayments from '@/hooks/query/usePayments'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import usePayments from '@/hooks/query/usePayments'
-import useRate from '@/hooks/query/useRate'
-import useUser from '@/hooks/query/useUser'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import { Colors } from '@/styles'
@@ -24,10 +24,7 @@ export default function Transaction() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const { data: userData } = useUser(accessToken)
   const wallet = userData?.wallets.find((w) => w.id === id)
-  const { data: payments } = usePayments(
-    wallet ? [wallet.inkey] : [],
-    !!wallet
-  )
+  const { data: payments } = usePayments(wallet ? [wallet.inkey] : [], !!wallet)
   const transaction = payments?.[0]?.find((t) => t.id === tid)
   const { data: rate } = useRate()
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)

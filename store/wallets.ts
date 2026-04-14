@@ -18,7 +18,9 @@ type WalletsActions = {
     walletId: Unpacked<Wallet[]>['id'],
     color: WalletCardColor
   ) => void
-  setSelectedWalletId: (selectedWalletId: WalletsState['selectedWalletId']) => void
+  setSelectedWalletId: (
+    selectedWalletId: WalletsState['selectedWalletId']
+  ) => void
 }
 
 const initialState: WalletsState = {

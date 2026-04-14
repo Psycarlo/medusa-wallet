@@ -12,8 +12,8 @@ import {
   bitcoinUnitDictionary,
   type SupportedBitcoinUnits
 } from '@/config/bitcoin'
-import { t } from '@/locales'
 import useUser from '@/hooks/query/useUser'
+import { t } from '@/locales'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 
