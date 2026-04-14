@@ -10,7 +10,8 @@ All notable changes to this project will be documented in this file.
 - Migrate from `react-native-sha256` to `expo-crypto`;
 - Implement missing biometric logic;
 - Use `@stripe/stripe-react-native` instead of web-view;
-- Implement `minSendable` and `maxSendable`.
+- Implement `minSendable` and `maxSendable`;
+- Loading state in `swaps`.
 
 ### Fixed
 

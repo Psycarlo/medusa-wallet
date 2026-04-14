@@ -13,6 +13,7 @@ import MIconButton from '@/components/MIconButton'
 import MQRCode from '@/components/MQRCode'
 import MSwapCard from '@/components/MSwapCard'
 import MText from '@/components/MText'
+import MSwapCardSkeleton from '@/components/skeletons/MSwapCardSkeleton'
 import useDeleteAutoSwap from '@/hooks/mutation/useDeleteAutoSwap'
 import useAutoSwaps from '@/hooks/query/useAutoSwaps'
 import useCurrentBlockHeight from '@/hooks/query/useCurrentBlockHeight'
@@ -38,8 +39,12 @@ export default function Swaps() {
   const defaultwallet = getDefaultWallet(wallets)
 
   const { data: blockHeight } = useCurrentBlockHeight()
-  const { data: swaps } = useSwaps(defaultwallet?.adminkey!)
-  const { data: autoSwaps } = useAutoSwaps(defaultwallet?.adminkey!)
+  const { data: swaps, isLoading: isLoadingSwaps } = useSwaps(
+    defaultwallet?.adminkey!
+  )
+  const { data: autoSwaps, isLoading: isLoadingAutoSwaps } = useAutoSwaps(
+    defaultwallet?.adminkey!
+  )
   const deleteAutoSwapMutation = useDeleteAutoSwap(defaultwallet?.adminkey!)
 
   const allSwaps = [
@@ -59,7 +64,7 @@ export default function Swaps() {
   if (!defaultwallet) return <Redirect href="/" />
 
   return (
-    <MMainLayout>
+    <MMainLayout withPaddingBottom>
       <Stack.Screen
         options={{
           headerTitle: () => (
@@ -92,56 +97,63 @@ export default function Swaps() {
             {blockHeight}
           </MText>
         </MVStack>
-        {/* TODO Add loading */}
-        <FlashList
-          data={allSwaps}
-          renderItem={({ item, index }) => {
-            if (item.kind === 'auto') {
+        {isLoadingSwaps || isLoadingAutoSwaps ? (
+          <MVStack>
+            <MSwapCardSkeleton />
+            <MSwapCardSkeleton />
+            <MSwapCardSkeleton />
+          </MVStack>
+        ) : (
+          <FlashList
+            data={allSwaps}
+            renderItem={({ item, index }) => {
+              if (item.kind === 'auto') {
+                return (
+                  <MSwapCard
+                    kind="auto"
+                    direction="out"
+                    walletName={
+                      wallets.find((wallet) => wallet.id === item.wallet)
+                        ?.name || ''
+                    }
+                    amount={item.amount}
+                    address={item.onchain_address}
+                    createdAt={item.time}
+                    count={item.count}
+                    isDeleting={deleteAutoSwapMutation.isPending}
+                    onDelete={() => deleteAutoSwapMutation.mutate(item.id)}
+                    first={index === 0}
+                  />
+                )
+              }
+
               return (
                 <MSwapCard
-                  kind="auto"
-                  direction="out"
+                  kind="normal"
+                  direction={item.direction === 'receive' ? 'in' : 'out'}
                   walletName={
                     wallets.find((wallet) => wallet.id === item.wallet)?.name ||
                     ''
                   }
                   amount={item.amount}
-                  address={item.onchain_address}
+                  address={item.address || item.lockup_address}
+                  expectedAmount={item.expected_amount}
                   createdAt={item.time}
-                  count={item.count}
-                  isDeleting={deleteAutoSwapMutation.isPending}
-                  onDelete={() => deleteAutoSwapMutation.mutate(item.id)}
+                  status={item.status}
+                  timeoutBlockHeight={item.timeout_block_height}
+                  currentBlockHeight={blockHeight}
                   first={index === 0}
+                  onDetails={() => handleSelectSwap(item.id)}
                 />
               )
-            }
-
-            return (
-              <MSwapCard
-                kind="normal"
-                direction={item.direction === 'receive' ? 'in' : 'out'}
-                walletName={
-                  wallets.find((wallet) => wallet.id === item.wallet)?.name ||
-                  ''
-                }
-                amount={item.amount}
-                address={item.address || item.lockup_address}
-                expectedAmount={item.expected_amount}
-                createdAt={item.time}
-                status={item.status}
-                timeoutBlockHeight={item.timeout_block_height}
-                currentBlockHeight={blockHeight}
-                first={index === 0}
-                onDetails={() => handleSelectSwap(item.id)}
-              />
-            )
-          }}
-          ListEmptyComponent={() => (
-            <MText color="muted" center>
-              {t('noSwaps')}
-            </MText>
-          )}
-        />
+            }}
+            ListEmptyComponent={() => (
+              <MText color="muted" center>
+                {t('noSwaps')}
+              </MText>
+            )}
+          />
+        )}
       </MVStack>
       <MBottomSheet
         ref={bottomSheetOnchainDetailsRef}
