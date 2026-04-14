@@ -3,9 +3,9 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import lnbits from '@/api/lnbits'
 import { PAYMENTS_PER_FETCH } from '@/config/payments'
 
-function usePaginatedPayments(inkey: string, enabled: boolean) {
+function usePaginatedPayments(accessToken: string, enabled: boolean) {
   async function fetchPaginatedPayments({ pageParam = 0 }) {
-    const { transactions } = await lnbits.getPaginatedPayments(inkey, {
+    const { transactions } = await lnbits.getAllPaginatedPayments(accessToken, {
       offset: pageParam * PAYMENTS_PER_FETCH
     })
     return transactions

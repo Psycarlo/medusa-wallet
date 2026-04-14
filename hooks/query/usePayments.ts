@@ -5,36 +5,26 @@ import lnbits from '@/api/lnbits'
 import { PAYMENTS_PER_FETCH } from '@/config/payments'
 import { useFiatStore } from '@/store/fiat'
 
-/**
- * WARNING: Does multiple calls
- * Refer to: https://github.com/lnbits/lnbits/issues/3123
- */
-function usePayments(inkeys: string[], enabled: boolean) {
+function usePayments(accessToken: string, enabled: boolean) {
   const [snapshots, addSnapshot] = useFiatStore(
     useShallow((state) => [state.snapshots, state.addSnapshot])
   )
 
   return useQuery({
-    queryKey: ['payments', inkeys],
+    queryKey: ['payments', accessToken],
     queryFn: async () => {
-      if (!inkeys) return []
-      const results = await Promise.all(
-        inkeys.map((inkey) =>
-          lnbits.getPaginatedPayments(
-            inkey,
-            { limit: PAYMENTS_PER_FETCH * 2 },
-            snapshots
-          )
+      const { transactions, newSnapshots } =
+        await lnbits.getAllPaginatedPayments(
+          accessToken,
+          { limit: PAYMENTS_PER_FETCH * 2 },
+          snapshots
         )
-      )
 
-      for (const { newSnapshots } of results) {
-        for (const [timestamp, snapshot] of Object.entries(newSnapshots)) {
-          addSnapshot(timestamp, snapshot)
-        }
+      for (const [timestamp, snapshot] of Object.entries(newSnapshots)) {
+        addSnapshot(timestamp, snapshot)
       }
 
-      return results.map(({ transactions }) => transactions)
+      return transactions
     },
     enabled
   })

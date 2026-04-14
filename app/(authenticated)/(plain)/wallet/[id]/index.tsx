@@ -44,8 +44,8 @@ export default function Wallet() {
 
   const { data: rate } = useRate()
 
-  const { data: payments } = usePayments(wallet ? [wallet.inkey] : [], !!wallet)
-  const transactions = payments?.[0] ?? []
+  const { data: payments } = usePayments(accessToken, !!wallet)
+  const transactions = (payments ?? []).filter((t) => t.walletId === id)
 
   // Update color on wallets created in lnbits dashboard
   useEffect(() => {

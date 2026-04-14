@@ -70,10 +70,7 @@ export default function Lightning() {
     data: payments,
     isFetching: paymentsIsFetching,
     refetch: paymentsRefetch
-  } = usePayments(
-    userData ? userData.wallets.map((wallet) => wallet.inkey) : [],
-    !!userData
-  )
+  } = usePayments(accessToken, !!userData)
 
   const totalBalance = userData?.totalBalance ?? 0
   const totalFiat = rate && totalBalance ? totalBalance / rate : 0
@@ -87,7 +84,6 @@ export default function Lightning() {
 
   const allTransactionsSorted = useMemo(() => {
     return (payments ?? [])
-      .flat()
       .filter(Boolean)
       .sort((a, b) => sort.sortTimestampDesc(a.timestamp, b.timestamp))
   }, [payments])
@@ -227,13 +223,9 @@ export default function Lightning() {
               {walletsSorted.length === 0 && <MWalletCardSkeleton />}
               {walletsSorted.length > 0 &&
                 walletsSorted.map((wallet) => {
-                  const walletIndex = userData?.wallets.findIndex(
-                    (w) => w.id === wallet.id
+                  const walletTransactions = (payments ?? []).filter(
+                    (t) => t.walletId === wallet.id
                   )
-                  const walletTransactions =
-                    walletIndex !== undefined && walletIndex !== -1
-                      ? (payments?.[walletIndex] ?? [])
-                      : []
                   const latestTransaction =
                     walletTransactions.length > 0
                       ? walletTransactions.reduce((latest, current) =>

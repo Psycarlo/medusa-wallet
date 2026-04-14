@@ -24,8 +24,8 @@ export default function Transaction() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const { data: userData } = useUser(accessToken)
   const wallet = userData?.wallets.find((w) => w.id === id)
-  const { data: payments } = usePayments(wallet ? [wallet.inkey] : [], !!wallet)
-  const transaction = payments?.[0]?.find((t) => t.id === tid)
+  const { data: payments } = usePayments(accessToken, !!wallet)
+  const transaction = payments?.find((t) => t.id === tid)
   const { data: rate } = useRate()
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =

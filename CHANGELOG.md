@@ -19,7 +19,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Server state handled only by `react-query`.
+- Server state handled only by `react-query`;
+- Use `/api/v1/payments/all/paginated` to fetch all payments in a single request.
 
 ## v0.3.0
 
