@@ -1,6 +1,7 @@
 import 'react-native-reanimated'
 
 import { useReactQueryDevTools } from '@dev-plugins/react-query'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import {
   onlineManager,
   QueryClient,
@@ -39,18 +40,20 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container}>
-        <Slot />
-        <Toaster
-          theme="dark"
-          position="bottom-center"
-          style={{
-            borderRadius: 8,
-            backgroundColor: Colors.grayDarkest,
-            borderWidth: 1,
-            borderColor: Colors.grayDarker
-          }}
-          duration={10_000}
-        />
+        <BottomSheetModalProvider>
+          <Slot />
+          <Toaster
+            theme="dark"
+            position="bottom-center"
+            style={{
+              borderRadius: 8,
+              backgroundColor: Colors.grayDarkest,
+              borderWidth: 1,
+              borderColor: Colors.grayDarker
+            }}
+            duration={10_000}
+          />
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   )
