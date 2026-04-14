@@ -21,8 +21,9 @@ import MFormLayout from '@/layouts/MFormLayout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import useUser from '@/hooks/query/useUser'
 import { SwapSchema } from '@/schemas/lnbits'
-import { useWalletsStore } from '@/store/wallets'
+import { useAuthStore } from '@/store/auth'
 import { formatNumber } from '@/utils/format'
 import { getDefaultWallet } from '@/utils/wallet'
 
@@ -30,7 +31,9 @@ export default function Swaps() {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const wallets = useWalletsStore((state) => state.wallets)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const wallets = userData?.wallets ?? []
 
   const defaultwallet = getDefaultWallet(wallets)
 

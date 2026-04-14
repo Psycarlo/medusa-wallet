@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -8,6 +9,7 @@ import { useWalletsStore } from '@/store/wallets'
 
 function useLogout() {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const [setPin, setLoggedOut, authStoreLogout] = useAuthStore(
     useShallow((state) => [state.setPin, state.setLoggedOut, state.logout])
@@ -20,6 +22,7 @@ function useLogout() {
   const logout = useCallback(async () => {
     authStoreLogout()
     clearWalletStore()
+    queryClient.clear()
     await setPin('')
     setPinEnabled(false)
     setBiometricEnabled(false)

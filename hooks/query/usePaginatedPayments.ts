@@ -5,9 +5,10 @@ import { PAYMENTS_PER_FETCH } from '@/config/payments'
 
 function usePaginatedPayments(inkey: string, enabled: boolean) {
   async function fetchPaginatedPayments({ pageParam = 0 }) {
-    return lnbits.getPaginatedPayments(inkey, {
+    const { transactions } = await lnbits.getPaginatedPayments(inkey, {
       offset: pageParam * PAYMENTS_PER_FETCH
-    }) // TODO: fix return
+    })
+    return transactions
   }
 
   return useInfiniteQuery({

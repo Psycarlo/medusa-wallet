@@ -1,5 +1,5 @@
 import { FlashList } from '@shopify/flash-list'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { useEffect, useMemo, useRef } from 'react'
@@ -18,9 +18,9 @@ import MTransactionCard from '@/components/MTransactionCard'
 import MWalletCard from '@/components/MWalletCard'
 import MWalletCardSkeleton from '@/components/skeletons/MWalletCardSkeleton'
 import { APP_VERSION } from '@/constants/version'
-import usePaylinks from '@/hooks/query/usePaylinks'
 // import usePaginatedPayments from '@/hooks/query/usePaginatedPayments'
 import usePayments from '@/hooks/query/usePayments'
+import useRate from '@/hooks/query/useRate'
 import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import useGetMedusaLatestVersion from '@/hooks/useGetMedusaLatestVersion'
@@ -29,7 +29,6 @@ import MHStack from '@/layouts/MHStack'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
 import { useAuthStore } from '@/store/auth'
-import { useFiatStore } from '@/store/fiat'
 import { useSettingsStore } from '@/store/settings'
 import { useVersionStore } from '@/store/version'
 import { useWalletsStore } from '@/store/wallets'
@@ -38,47 +37,15 @@ import { mainLayoutPaddingHorizontal } from '@/styles/layout'
 import fiat from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
 import { withHapticsSelection } from '@/utils/haptics'
-import parse from '@/utils/parse'
 import sort from '@/utils/sort'
 import version from '@/utils/version'
 
 export default function Lightning() {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const [accessToken, setUsername, setEmail] = useAuthStore(
-    useShallow((state) => [
-      state.accessToken,
-      state.setUsername,
-      state.setEmail
-    ])
-  )
-  const [
-    wallets,
-    walletColors,
-    totalBalance,
-    totalFiat,
-    setWallets,
-    setTotalBalance,
-    setTotalFiat,
-    setTransactions,
-    setPaylink
-  ] = useWalletsStore(
-    useShallow((state) => [
-      state.wallets,
-      state.walletColors,
-      state.totalBalance,
-      state.totalFiat,
-      state.setWallets,
-      state.setTotalBalance,
-      state.setTotalFiat,
-      state.setTransactions,
-      state.setPaylink
-    ])
-  )
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const walletColors = useWalletsStore((state) => state.walletColors)
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)
-  const [rate, setRate] = useFiatStore(
-    useShallow((state) => [state.rate, state.setRate])
-  )
   const [dismissedVersions, addDismissedVersion] = useVersionStore(
     useShallow((state) => [state.dismissedVersions, state.addDismissedVersion])
   )
@@ -97,20 +64,10 @@ export default function Lightning() {
     refetch: userRefetch
   } = useUser(accessToken)
 
-  const { data: paylinkData, isSuccess: paylinkIsSuccess } = usePaylinks(
-    parse.getOldestWallet(userData?.wallets)?.inkey!,
-    !!userData?.wallets
-  )
-
-  const { data: fiatRate, isSuccess: rateIsSuccess } = useQuery({
-    queryKey: ['rate', fiatCurrency],
-    queryFn: () => lnbits.rate(fiatCurrency),
-    enabled: !!fiatCurrency
-  })
+  const { data: rate } = useRate()
 
   const {
     data: payments,
-    isSuccess: paymentsIsSuccess,
     isFetching: paymentsIsFetching,
     refetch: paymentsRefetch
   } = usePayments(
@@ -118,29 +75,27 @@ export default function Lightning() {
     !!userData
   )
 
+  const totalBalance = userData?.totalBalance ?? 0
+  const totalFiat = rate && totalBalance ? totalBalance / rate : 0
+
   const walletsSorted = useMemo(() => {
+    const wallets = userData?.wallets ?? []
     return [...wallets].sort((a, b) =>
       sort.sortTimestampAsc(a.createdAt, b.createdAt)
     )
-  }, [wallets])
+  }, [userData?.wallets])
 
   const allTransactionsSorted = useMemo(() => {
-    return wallets
-      .flatMap((wallet) => wallet.transactions)
+    return (payments ?? [])
+      .flat()
       .filter(Boolean)
       .sort((a, b) => sort.sortTimestampDesc(a.timestamp, b.timestamp))
-  }, [wallets])
+  }, [payments])
 
   const wsSubscriptions = useRef(new Map<string, WebSocket>())
 
   useEffect(() => {
     if (userIsSuccess && userData && !userIsFetching) {
-      setUsername(userData.username)
-      setEmail(userData.email || '')
-      setWallets(userData.wallets)
-      setTotalBalance(userData.totalBalance)
-      if (fiatRate) setTotalFiat(totalBalance / fiatRate)
-
       for (const wallet of userData.wallets) {
         if (!wsSubscriptions.current.has(wallet.inkey)) {
           const ws = lnbits.subscribeInkeyWs(wallet.inkey, (amount) => {
@@ -171,26 +126,6 @@ export default function Lightning() {
       currentSubs.clear()
     }
   }, [userIsSuccess, userIsFetching]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (paylinkIsSuccess && paylinkData && paylinkData.length > 0) {
-      setPaylink(paylinkData[0])
-    }
-  }, [paylinkIsSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (rateIsSuccess && fiatRate) {
-      setRate(fiatRate)
-      setTotalFiat(fiatRate && totalBalance / fiatRate)
-    }
-  }, [rateIsSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (paymentsIsSuccess && payments && !paymentsIsFetching) {
-      // const _payments = payments.pages
-      setTransactions(payments.filter(Boolean))
-    }
-  }, [paymentsIsSuccess, paymentsIsFetching]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!medusaLatestVersion) return
@@ -291,30 +226,41 @@ export default function Lightning() {
             >
               {walletsSorted.length === 0 && <MWalletCardSkeleton />}
               {walletsSorted.length > 0 &&
-                walletsSorted.map((wallet) => (
-                  <MWalletCard
-                    key={wallet.id}
-                    name={wallet.name}
-                    sats={wallet.balance}
-                    fiat={fiatCurrency}
-                    fiatAmount={formatNumber(rate && wallet.balance / rate, 2)}
-                    latestTransaction={
-                      wallet.transactions && wallet.transactions.length > 0
-                        ? wallet.transactions.reduce((latest, current) => {
-                            return current.timestamp > latest.timestamp
-                              ? current
-                              : latest
-                          }).timestamp
-                        : 0
-                    }
-                    color={walletColors[wallet.id]}
-                    onPress={() =>
-                      withHapticsSelection(() =>
-                        router.push(`/wallet/${wallet.id}`)
-                      )
-                    }
-                  />
-                ))}
+                walletsSorted.map((wallet) => {
+                  const walletIndex = userData?.wallets.findIndex(
+                    (w) => w.id === wallet.id
+                  )
+                  const walletTransactions =
+                    walletIndex !== undefined && walletIndex !== -1
+                      ? (payments?.[walletIndex] ?? [])
+                      : []
+                  const latestTransaction =
+                    walletTransactions.length > 0
+                      ? walletTransactions.reduce((latest, current) =>
+                          current.timestamp > latest.timestamp ? current : latest
+                        ).timestamp
+                      : 0
+
+                  return (
+                    <MWalletCard
+                      key={wallet.id}
+                      name={wallet.name}
+                      sats={wallet.balance}
+                      fiat={fiatCurrency}
+                      fiatAmount={formatNumber(
+                        rate ? wallet.balance / rate : 0,
+                        2
+                      )}
+                      latestTransaction={latestTransaction}
+                      color={walletColors[wallet.id]}
+                      onPress={() =>
+                        withHapticsSelection(() =>
+                          router.push(`/wallet/${wallet.id}`)
+                        )
+                      }
+                    />
+                  )
+                })}
               <MNewWalletButton
                 onPress={() =>
                   withHapticsSelection(() => router.push('/newWallet'))
@@ -338,7 +284,7 @@ export default function Lightning() {
               <MTransactionCard
                 fiat={fiatCurrency}
                 transaction={item}
-                currentFiatPrice={rate && item.sats / rate}
+                currentFiatPrice={rate ? item.sats / rate : 0}
                 first={index === 0}
                 last={index === allTransactionsSorted.length - 1}
                 onPress={() => {

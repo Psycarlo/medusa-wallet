@@ -18,15 +18,16 @@ import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import usePay from '@/hooks/mutation/usePay'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import MCenter from '@/layouts/MCenter'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import { SendDetailsSearchParams } from '@/types/searchParams'
 import fiatUtils from '@/utils/fiat'
@@ -38,13 +39,13 @@ export default function Send() {
   const router = useRouter()
   const { walletId, invoice } = useLocalSearchParams<SendDetailsSearchParams>()
 
-  const wallets = useWalletsStore((state) => state.wallets)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const { data: rate } = useRate()
+  const wallets = userData?.wallets ?? []
   const defaultWallet = getDefaultWallet(wallets)
   const lookupId = walletId || defaultWallet?.id
-  const wallet = useWalletsStore((state) =>
-    state.wallets.find((wallet) => wallet.id === lookupId)
-  )
-  const rate = useFiatStore((state) => state.rate)
+  const wallet = wallets.find((w) => w.id === lookupId)
   const [fiatCurrency, bitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
@@ -158,12 +159,12 @@ export default function Send() {
   }
 
   function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
+    const amountInSats = Math.ceil(Number(fiat) * (rate ?? 0))
     setLocalAmount(String(amountInSats))
   }
 
   function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
+    const amountInFiat = rate ? Number(sats) / rate : 0
     setLocalFiat(amountInFiat.toFixed(2))
   }
 
@@ -263,7 +264,7 @@ export default function Send() {
               </MHStack>
               <MText>
                 {fiatUtils.getSymbol(fiatCurrency)}
-                {formatNumber(rate && amount / rate, 2)}
+                {formatNumber(rate ? amount / rate : 0, 2)}
               </MText>
             </MVStack>
           </TouchableHighlight>
@@ -307,7 +308,7 @@ export default function Send() {
                     <MText weight="medium">{formatNumber(amount)} sats</MText>
                     <MText color="muted" weight="medium">
                       {fiatUtils.getSymbol(fiatCurrency)}
-                      {formatNumber(rate && amount / rate, 2)}
+                      {formatNumber(rate ? amount / rate : 0, 2)}
                     </MText>
                     {invoiceType === 'wellknown' && <Pencil />}
                   </MHStack>
@@ -381,7 +382,7 @@ export default function Send() {
               }
               fiat={Number(localFiat)}
               fiatCurrency={fiatCurrency}
-              rate={rate}
+              rate={rate ?? 0}
               withMax
               onPressMax={handleOnPressMax}
               onChangeType={(type) => setAmountType(type)}

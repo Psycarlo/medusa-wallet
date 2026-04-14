@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
 
 - Keyboard overlapping inputs.
 
+### Changed
+
+- Server state handled only by `react-query`.
+
 ## v0.3.0
 
 ### Added

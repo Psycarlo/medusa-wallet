@@ -321,8 +321,7 @@ async function getPaginatedPayments(
     offset = 0,
     walletId = undefined
   }: GetPaginatedPaymentsOptions = {},
-  snapshots: Record<string, FiatSnapshot> = {},
-  addSnapshot: (timestamp: string, snapshot: FiatSnapshot) => void = () => {}
+  snapshots: Record<string, FiatSnapshot> = {}
 ) {
   const url = new URL(`${getCurrentBaseUrl()}/api/v1/payments`)
   url.searchParams.append('status', 'success')
@@ -361,6 +360,7 @@ async function getPaginatedPayments(
   )
 
   const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
+  const newSnapshots: Record<string, FiatSnapshot> = {}
 
   for (const [timestamp, ids] of Object.entries(historicalPricesMap)) {
     let fiatSnapshot: FiatSnapshot
@@ -370,15 +370,15 @@ async function getPaginatedPayments(
     } else {
       const ts = Number(timestamp)
       fiatSnapshot = await medusa.getBitcoinPricesAt(ts)
+      newSnapshots[timestamp] = fiatSnapshot
     }
 
     for (const id of ids) {
       fiatSnapshotForIds[id] = fiatSnapshot
-      addSnapshot(timestamp, fiatSnapshot)
     }
   }
 
-  return data
+  const transactions = data
     .map((payment) => parse.fromLnbitsPaymentToTransaction(payment))
     .map((transaction) => ({
       ...transaction,
@@ -393,6 +393,8 @@ async function getPaginatedPayments(
         )
       ) as FiatSnapshot
     }))
+
+  return { transactions, newSnapshots }
 }
 
 // TODO: getPaymentByHash

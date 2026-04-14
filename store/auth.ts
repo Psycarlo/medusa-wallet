@@ -8,8 +8,6 @@ import mmkvStorage from '@/storage/mmkv'
 type AuthState = {
   firstTime: boolean
   loggedOut: boolean
-  username: string
-  email: string
   accessToken: string
   newPin: string
   pinRetries: number
@@ -19,8 +17,6 @@ type AuthState = {
 type AuthActions = {
   setFirstTime: (firstTime: AuthState['firstTime']) => void
   setLoggedOut: (loggedOut: AuthState['loggedOut']) => void
-  setUsername: (username: AuthState['username']) => void
-  setEmail: (email: AuthState['email']) => void
   setPin: (pin: string) => Promise<void>
   validatePin: (pin: string) => Promise<boolean>
   setAccessToken: (accessToken: AuthState['accessToken']) => void
@@ -36,9 +32,6 @@ const useAuthStore = create<AuthState & AuthActions>()(
     (set, get) => ({
       firstTime: true,
       loggedOut: true,
-      username: '',
-      email: '',
-      password: '',
       accessToken: '',
       newPin: '',
       pinRetries: PIN_RETRIES,
@@ -48,12 +41,6 @@ const useAuthStore = create<AuthState & AuthActions>()(
       },
       setLoggedOut: (loggedOut) => {
         set({ loggedOut })
-      },
-      setUsername: (username) => {
-        set({ username })
-      },
-      setEmail: (email) => {
-        set({ email })
       },
       setPin: async (pin) => {
         await setItem(PIN_KEY, pin)
@@ -80,8 +67,7 @@ const useAuthStore = create<AuthState & AuthActions>()(
       logout: () => {
         set({
           accessToken: '',
-          loggedOut: true,
-          username: ''
+          loggedOut: true
         })
       }
     }),

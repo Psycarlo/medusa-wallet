@@ -20,18 +20,10 @@ import { useAuthStore } from '@/store/auth'
 
 export default function Signup() {
   const router = useRouter()
-  const [
-    setFirstTime,
-    setLoggedOut,
-    setUsernameStore,
-    setEmailStore,
-    setAccessToken
-  ] = useAuthStore(
+  const [setFirstTime, setLoggedOut, setAccessToken] = useAuthStore(
     useShallow((state) => [
       state.setFirstTime,
       state.setLoggedOut,
-      state.setUsername,
-      state.setEmail,
       state.setAccessToken
     ])
   )
@@ -49,8 +41,6 @@ export default function Signup() {
     mutationFn: () => lnbits.register(username, email, password),
     onSuccess: (accessToken) => {
       if (!accessToken) return
-      setUsernameStore(username)
-      setEmailStore(email)
       setAccessToken(accessToken)
       setFirstTime(false)
       setLoggedOut(false)

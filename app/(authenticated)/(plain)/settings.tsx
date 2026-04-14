@@ -26,13 +26,15 @@ import useLogout from '@/hooks/useLogout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import usePaylinks from '@/hooks/query/usePaylinks'
+import useUser from '@/hooks/query/useUser'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import fiat from '@/utils/fiat'
 import languageUtils from '@/utils/language'
 import { getPaylinkAddress } from '@/utils/medusa'
+import parse from '@/utils/parse'
 
 // To enable BIOMETRIC, user needs to have pin enabled
 // If PIN is enabled, BIOMETRIC can be disabled without confirmation
@@ -44,10 +46,16 @@ import { getPaylinkAddress } from '@/utils/medusa'
 
 export default function Settings() {
   const router = useRouter()
-  const [username, email] = useAuthStore(
-    useShallow((state) => [state.username, state.email])
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const username = userData?.username ?? ''
+  const email = userData?.email ?? ''
+  const oldestWallet = parse.getOldestWallet(userData?.wallets)
+  const { data: paylinkData } = usePaylinks(
+    oldestWallet?.inkey ?? '',
+    !!oldestWallet
   )
-  const paylinkUsername = useWalletsStore((state) => state.paylink?.username)
+  const paylinkUsername = paylinkData?.[0]?.username
 
   const [
     language,

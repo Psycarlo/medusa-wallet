@@ -13,14 +13,17 @@ import {
   type SupportedBitcoinUnits
 } from '@/config/bitcoin'
 import { t } from '@/locales'
+import useUser from '@/hooks/query/useUser'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 
 import MBottomSheet from '../MBottomSheet'
 import MSheetSelector from '../MSheetSelector'
 
 function BitcoinUnitSheet(_: any, ref: ForwardedRef<BottomSheetMethods>) {
-  const totalBalance = useWalletsStore((state) => state.totalBalance)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const totalBalance = userData?.totalBalance ?? 0
   const [bitcoinUnit, setBitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.bitcoinUnit, state.setBitcoinUnit])
   )

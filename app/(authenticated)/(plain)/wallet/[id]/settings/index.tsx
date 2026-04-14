@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { Alert } from 'react-native'
@@ -11,10 +11,12 @@ import MColorSelector from '@/components/MColorSelector'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { WALLET_CARD_COLORS } from '@/config/colors'
+import useUser from '@/hooks/query/useUser'
 import MFormLayout from '@/layouts/MFormLayout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import { useAuthStore } from '@/store/auth'
 import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import type { WalletSearchParams } from '@/types/searchParams'
@@ -22,34 +24,21 @@ import { isDefaultWallet as getIsDefaultWallet } from '@/utils/wallet'
 
 export default function WalletSettings() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { id } = useLocalSearchParams<WalletSearchParams>()
 
-  // TODO: Get wallet keys/name via api
-  // TODO: Get wallet color via api
-  // TODO: Discard zustand since it's server state
-  // TODO: Add Loading: loaders, skeletons, etc.
-
-  const [
-    wallet,
-    wallets,
-    walletColors,
-    updateWalletName,
-    updateWalletColor,
-    deleteWallet
-  ] = useWalletsStore(
-    useShallow((state) => [
-      state.wallets.find((wallet) => wallet.id === id),
-      state.wallets,
-      state.walletColors,
-      state.updateWalletName,
-      state.updateWalletColor,
-      state.deleteWallet
-    ])
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const [walletColors, updateWalletColor] = useWalletsStore(
+    useShallow((state) => [state.walletColors, state.updateWalletColor])
   )
+
+  const { data: userData } = useUser(accessToken)
+  const wallet = userData?.wallets.find((w) => w.id === id)
+  const wallets = userData?.wallets ?? []
 
   const [newWalletName, setNewWalletName] = useState(wallet?.name || '')
   const [walletColorId, setWalletColorId] = useState(
-    walletColors[wallet!.id].id
+    (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
   )
   const [hasChanges, setHasChanges] = useState(false)
   const [hasNameChanged, setHasNameChanged] = useState(false)
@@ -63,8 +52,8 @@ export default function WalletSettings() {
   const updateWalletNameMutation = useMutation({
     mutationKey: ['updateWalletName'],
     mutationFn: () => lnbits.updateWalletName(newWalletName, wallet!.adminkey),
-    onSuccess: (wallet) => {
-      if (wallet) updateWalletName(wallet)
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] })
     }
   })
 
@@ -73,7 +62,7 @@ export default function WalletSettings() {
     mutationFn: () => lnbits.deleteWallet(wallet!.id, wallet!.adminkey),
     onSuccess: () => {
       router.navigate('/')
-      if (wallet) deleteWallet(wallet)
+      queryClient.invalidateQueries({ queryKey: ['user'] })
     }
   })
 
@@ -85,8 +74,8 @@ export default function WalletSettings() {
 
   function handleOnChangeNewWalletColorId(id: string) {
     setWalletColorId(id)
-    setHasChanges(id !== walletColors[wallet!.id].id)
-    setHasColorChanged(id !== walletColors[wallet!.id].id)
+    setHasChanges(id !== walletColors[wallet!.id]?.id)
+    setHasColorChanged(id !== walletColors[wallet!.id]?.id)
   }
 
   function handleUpdateWallet() {

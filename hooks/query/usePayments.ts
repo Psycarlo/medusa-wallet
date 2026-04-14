@@ -18,17 +18,23 @@ function usePayments(inkeys: string[], enabled: boolean) {
     queryKey: ['payments', inkeys],
     queryFn: async () => {
       if (!inkeys) return []
-      const payments = await Promise.all(
+      const results = await Promise.all(
         inkeys.map((inkey) =>
           lnbits.getPaginatedPayments(
             inkey,
             { limit: PAYMENTS_PER_FETCH * 2 },
-            snapshots,
-            addSnapshot
+            snapshots
           )
         )
       )
-      return payments
+
+      for (const { newSnapshots } of results) {
+        for (const [timestamp, snapshot] of Object.entries(newSnapshots)) {
+          addSnapshot(timestamp, snapshot)
+        }
+      }
+
+      return results.map(({ transactions }) => transactions)
     },
     enabled
   })
