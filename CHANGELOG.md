@@ -9,7 +9,8 @@ All notable changes to this project will be documented in this file.
 - Migrate from `expo v53` to `expo v55`;
 - Migrate from `react-native-sha256` to `expo-crypto`;
 - Implement missing biometric logic;
-- Use `@stripe/stripe-react-native` instead of web-view.
+- Use `@stripe/stripe-react-native` instead of web-view;
+- Implement `minSendable` and `maxSendable`.
 
 ### Fixed
 
