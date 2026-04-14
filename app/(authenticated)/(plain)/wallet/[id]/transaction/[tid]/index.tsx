@@ -115,7 +115,7 @@ export default function Transaction() {
               <MText color="muted">{t('fee')}</MText>
               <MHStack gap="xs" style={{ width: 'auto' }}>
                 <MText weight="medium">
-                  {formatNumber(-transaction.fee, 0, true)}
+                  {formatNumber(-transaction.fee || 0, 0, true)}
                 </MText>
                 <MText color="muted">sats</MText>
               </MHStack>

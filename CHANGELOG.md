@@ -15,7 +15,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Keyboard overlapping inputs.
+- Keyboard overlapping inputs;
+- 0 fee showing as -0.
 
 ### Changed
 
