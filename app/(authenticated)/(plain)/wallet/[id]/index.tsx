@@ -45,7 +45,9 @@ export default function Wallet() {
   const { data: rate } = useRate()
 
   const { data: payments } = usePayments(accessToken, !!wallet)
-  const transactions = (payments ?? []).filter((t) => t.walletId === id)
+  const transactions = (payments ?? [])
+    .filter((t) => t.walletId === id)
+    .sort((a, b) => b.timestamp - a.timestamp)
 
   // Update color on wallets created in lnbits dashboard
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function Wallet() {
   if (!wallet) return <Redirect href="/" />
 
   return (
-    <MMainLayout>
+    <MMainLayout withPaddingBottom>
       <Stack.Screen
         options={{
           headerRight: () => (
