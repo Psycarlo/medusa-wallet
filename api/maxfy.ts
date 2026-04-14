@@ -41,6 +41,13 @@ async function createTransaction(
       method: 'POST'
     }
   )
+
+  if (!response.ok) {
+    throw new Error(
+      `Create transaction failed: ${response.status} ${response.statusText}`
+    )
+  }
+
   const json = await response.json()
 
   const data = CheckoutSchema.parse(json)
