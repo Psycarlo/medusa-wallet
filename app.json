@@ -65,6 +65,13 @@
         }
       ],
       "expo-web-browser",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.bz.medusa.wallet",
+          "enableGooglePay": false
+        }
+      ],
       "expo-image",
       [
         "expo-build-properties",

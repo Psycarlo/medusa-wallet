@@ -10,6 +10,7 @@ const VoucherSchema = z.object({
 
 export const VouchersSchema = z.object({ vouchers: z.array(VoucherSchema) })
 
+
 export const CheckoutSchema = z.object({
   txid: z.string(),
   stripe_price: z.string(),
@@ -17,5 +18,6 @@ export const CheckoutSchema = z.object({
   customer_email: z.string().email(),
   voucher_id: z.number(),
   checkout_url: z.string().url(),
+  client_secret: z.string(),
   operation: z.enum(['added_ok'])
 })
