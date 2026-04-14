@@ -155,7 +155,11 @@ export default function Send() {
 
   function handleOnPressMax() {
     if (!wallet) return
-    setLocalAmount(String(wallet.balance))
+    const max =
+      maxSendable > 0
+        ? Math.min(wallet.balance, Math.floor(maxSendable / 1000))
+        : wallet.balance
+    setLocalAmount(String(max))
   }
 
   function syncSatsWithFiat(fiat: string) {
@@ -212,8 +216,22 @@ export default function Send() {
 
   function handleConfirmAmount() {
     const amount = Number(localAmount)
-    setAmount(amount)
 
+    if (minSendable > 0 && amount < Math.ceil(minSendable / 1000)) {
+      toast.error(
+        t('errorAmountBelowMin', { min: Math.ceil(minSendable / 1000) })
+      )
+      return
+    }
+
+    if (maxSendable > 0 && amount > Math.floor(maxSendable / 1000)) {
+      toast.error(
+        t('errorAmountAboveMax', { max: Math.floor(maxSendable / 1000) })
+      )
+      return
+    }
+
+    setAmount(amount)
     setInsufficientFunds(amount > wallet!.balance)
     amountBottomSheetRef.current?.close()
   }
