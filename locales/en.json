@@ -91,6 +91,8 @@
   "enterPinAgain": "Enter PIN again",
   "enterWalletName": "Enter wallet name",
   "enterYourPin": "Enter your PIN",
+  "errorAmountBelowMin": "Amount must be at least {{min}} sats",
+  "errorAmountAboveMax": "Amount must be at most {{max}} sats",
   "errorCantChangeAmount": "You cannot change this amount",
   "errorCreateAutoSwap": "Error while trying to create auto swap. Only 1 auto swap per wallet possible.",
   "errorCreateSwap": "Error while trying to create swap. Check if you have sufficient balance.",
