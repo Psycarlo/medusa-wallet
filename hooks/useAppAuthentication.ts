@@ -101,12 +101,11 @@ function useAppAuthentication() {
           if (!biometricEnabled) router.navigate('/unlock')
           else {
             // Tries biometric first with black background (if enabled)
-            const [hasHardware, isEnrolled, enrolledLevel] =
-              await Promise.all([
-                LocalAuthentication.hasHardwareAsync(),
-                LocalAuthentication.isEnrolledAsync(),
-                LocalAuthentication.getEnrolledLevelAsync()
-              ])
+            const [hasHardware, isEnrolled, enrolledLevel] = await Promise.all([
+              LocalAuthentication.hasHardwareAsync(),
+              LocalAuthentication.isEnrolledAsync(),
+              LocalAuthentication.getEnrolledLevelAsync()
+            ])
             if (
               !hasHardware ||
               !isEnrolled ||

@@ -14,7 +14,12 @@ type MPinInputProps = {
 }
 
 export default function MPinInput({ filledCharacter }: MPinInputProps) {
-  const icons = [<Jellyfish />, <Fishbone />, <Speedboat />, <Bitcoin />]
+  const icons = [
+    <Jellyfish key="jellyfish" />,
+    <Fishbone key="fishbone" />,
+    <Speedboat key="speedboat" />,
+    <Bitcoin key="bitcoin" />
+  ]
 
   return (
     <MHStack gap="sm">
