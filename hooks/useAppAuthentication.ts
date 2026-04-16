@@ -1,6 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication'
 import { usePathname, useRouter } from 'expo-router'
-import { useCallback, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import { AppState, type AppStateStatus } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
@@ -62,90 +62,79 @@ function useAppAuthentication() {
     }
   }, [pathname])
 
-  const handleAppStateChanged = useCallback(
-    async (nextAppState: AppStateStatus) => {
-      const requiresAuth = pinEnabled && !loggedOut
+  const handleAppStateChanged = async (nextAppState: AppStateStatus) => {
+    const requiresAuth = pinEnabled && !loggedOut
 
-      if (requiresAuth && nextAppState === 'background') {
-        setLastBackgroundTimestamp(Date.now())
+    if (requiresAuth && nextAppState === 'background') {
+      setLastBackgroundTimestamp(Date.now())
+    }
+
+    if (
+      nextAppState === 'inactive' ||
+      (Platform.OS === 'android' && nextAppState === 'background')
+    ) {
+      router.replace('/(modals)/privacy') // Note: does not update app preview on android
+    } else if (
+      nextAppState === 'active' &&
+      appState.current.match(/background|inactive/)
+    ) {
+      const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
+
+      // If back active within grace period go back to packge if camera, send or receive
+      if (elapsed <= GRACE_PERIOD_TIME) {
+        if (
+          lastRoute.current &&
+          ['camera', 'send', 'receive'].some((p) =>
+            lastRoute.current?.includes(p)
+          )
+        ) {
+          router.replace(lastRoute.current as any)
+          return
+        }
       }
 
-      if (
-        nextAppState === 'inactive' ||
-        (Platform.OS === 'android' && nextAppState === 'background')
-      ) {
-        router.replace('/(modals)/privacy') // Note: does not update app preview on android
-      } else if (
-        nextAppState === 'active' &&
-        appState.current.match(/background|inactive/)
-      ) {
-        const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
-
-        // If back active within grace period go back to packge if camera, send or receive
-        if (elapsed <= GRACE_PERIOD_TIME) {
-          if (
-            lastRoute.current &&
-            ['camera', 'send', 'receive'].some((p) =>
-              lastRoute.current?.includes(p)
+      if (!requiresAuth) {
+        router.replace('/')
+      } else {
+        if (elapsed >= LOCK_TIME || authTriggered) {
+          setAuthTriggered(true)
+          if (!biometricEnabled) router.navigate('/unlock')
+          else {
+            // Tries biometric first with black background (if enabled)
+            const [hasHardware, isEnrolled, enrolledLevel] =
+              await Promise.all([
+                LocalAuthentication.hasHardwareAsync(),
+                LocalAuthentication.isEnrolledAsync(),
+                LocalAuthentication.getEnrolledLevelAsync()
+              ])
+            if (
+              !hasHardware ||
+              !isEnrolled ||
+              enrolledLevel < ALLOWED_ENROLLED_LEVEL
             )
-          ) {
-            router.replace(lastRoute.current as any)
-            return
-          }
-        }
-
-        if (!requiresAuth) {
-          router.replace('/')
-        } else {
-          if (elapsed >= LOCK_TIME || authTriggered) {
-            setAuthTriggered(true)
-            if (!biometricEnabled) router.navigate('/unlock')
+              router.navigate('/unlock')
             else {
-              // Tries biometric first with black background (if enabled)
-              const [hasHardware, isEnrolled, enrolledLevel] =
-                await Promise.all([
-                  LocalAuthentication.hasHardwareAsync(),
-                  LocalAuthentication.isEnrolledAsync(),
-                  LocalAuthentication.getEnrolledLevelAsync()
-                ])
-              if (
-                !hasHardware ||
-                !isEnrolled ||
-                enrolledLevel < ALLOWED_ENROLLED_LEVEL
-              )
-                router.navigate('/unlock')
-              else {
-                router.replace('/(modals)/empty')
+              router.replace('/(modals)/empty')
 
-                const authenticateResult =
-                  await LocalAuthentication.authenticateAsync({
-                    disableDeviceFallback: true
-                  })
+              const authenticateResult =
+                await LocalAuthentication.authenticateAsync({
+                  disableDeviceFallback: true
+                })
 
-                if (authenticateResult.success) {
-                  setAuthTriggered(false)
-                  router.replace('/')
-                } else router.navigate('/unlock')
-              }
+              if (authenticateResult.success) {
+                setAuthTriggered(false)
+                router.replace('/')
+              } else router.navigate('/unlock')
             }
-          } else {
-            router.replace('/')
           }
+        } else {
+          router.replace('/')
         }
       }
+    }
 
-      appState.current = nextAppState
-    },
-    [
-      appState,
-      router,
-      pinEnabled,
-      biometricEnabled,
-      loggedOut,
-      authTriggered,
-      setAuthTriggered
-    ]
-  )
+    appState.current = nextAppState
+  }
 
   useEffect(() => {
     if (coldStart.current) {
@@ -159,7 +148,7 @@ function useAppAuthentication() {
     )
 
     return () => subscription.remove()
-  }, [handleAppStateChanged])
+  }, [handleAppStateChanged]) // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 export default useAppAuthentication

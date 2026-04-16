@@ -2,7 +2,7 @@ import { FlashList } from '@shopify/flash-list'
 import { useQueryClient } from '@tanstack/react-query'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { RefreshControl, ScrollView } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
@@ -75,18 +75,13 @@ export default function Lightning() {
   const totalBalance = userData?.totalBalance ?? 0
   const totalFiat = rate && totalBalance ? totalBalance / rate : 0
 
-  const walletsSorted = useMemo(() => {
-    const wallets = userData?.wallets ?? []
-    return [...wallets].sort((a, b) =>
-      sort.sortTimestampAsc(a.createdAt, b.createdAt)
-    )
-  }, [userData?.wallets])
+  const walletsSorted = [...(userData?.wallets ?? [])].sort((a, b) =>
+    sort.sortTimestampAsc(a.createdAt, b.createdAt)
+  )
 
-  const allTransactionsSorted = useMemo(() => {
-    return (payments ?? [])
-      .filter(Boolean)
-      .sort((a, b) => sort.sortTimestampDesc(a.timestamp, b.timestamp))
-  }, [payments])
+  const allTransactionsSorted = (payments ?? [])
+    .filter(Boolean)
+    .sort((a, b) => sort.sortTimestampDesc(a.timestamp, b.timestamp))
 
   const wsSubscriptions = useRef(new Map<string, WebSocket>())
 

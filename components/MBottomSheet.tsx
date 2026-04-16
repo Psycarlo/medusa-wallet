@@ -8,7 +8,6 @@ import { type BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/typ
 import {
   type ForwardedRef,
   forwardRef,
-  useCallback,
   useImperativeHandle,
   useRef
 } from 'react'
@@ -46,16 +45,13 @@ function MBottomSheet(
     forceClose: () => bottomSheetModalRef.current?.dismiss()
   }))
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-      />
-    ),
-    []
+  const renderBackdrop = (props: BottomSheetBackdropProps) => (
+    <BottomSheetBackdrop
+      {...props}
+      appearsOnIndex={0}
+      disappearsOnIndex={-1}
+      pressBehavior="close"
+    />
   )
 
   return (

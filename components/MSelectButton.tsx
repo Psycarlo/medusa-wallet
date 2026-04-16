@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import {
   type StyleProp,
   StyleSheet,
@@ -25,9 +25,10 @@ function MSelectButton({
   style,
   ...props
 }: MSelectButtonProps) {
-  const selectButtonStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose({ ...styles.selectButtonBase }, style)
-  }, [style])
+  const selectButtonStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    { ...styles.selectButtonBase },
+    style
+  )
 
   return (
     <TouchableHighlight

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Alert } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
@@ -42,10 +42,7 @@ export default function WalletSettings() {
   const [hasNameChanged, setHasNameChanged] = useState(false)
   const [hasColorChanged, setHasColorChanged] = useState(false)
 
-  const isDefaultWallet = useMemo(
-    () => getIsDefaultWallet(id, userData?.wallets ?? []),
-    [id, userData?.wallets]
-  )
+  const isDefaultWallet = getIsDefaultWallet(id, userData?.wallets ?? [])
 
   const updateWalletNameMutation = useMutation({
     mutationKey: ['updateWalletName'],

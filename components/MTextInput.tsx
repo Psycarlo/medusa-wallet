@@ -1,5 +1,5 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
-import { type ForwardedRef, forwardRef, useMemo, useState } from 'react'
+import { type ForwardedRef, forwardRef, useState } from 'react'
 import {
   type StyleProp,
   StyleSheet,
@@ -25,14 +25,12 @@ function MTextInput(
   const Input = bottomSheet ? BottomSheetTextInput : TextInput
   const [isSecure, setIsSecure] = useState(!!secureTextEntry)
 
-  const textInputStyle = useMemo<StyleProp<TextStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.textInputBase
-      },
-      style
-    )
-  }, [style])
+  const textInputStyle: StyleProp<TextStyle> = StyleSheet.compose(
+    {
+      ...styles.textInputBase
+    },
+    style
+  )
 
   return (
     <View style={styles.containerBase}>

@@ -4,7 +4,6 @@ import {
   cloneElement,
   isValidElement,
   memo,
-  useMemo,
   useState
 } from 'react'
 import { type StyleProp, TouchableOpacity, type ViewStyle } from 'react-native'
@@ -26,26 +25,22 @@ function MIconButton({
 }: MIconButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
 
-  const enhancedChildren = useMemo(() => {
-    return Children.map(children, (child) => {
-      if (isValidElement(child)) {
-        return cloneElement(child, {
-          stroke: isPressed ? `${Colors.grayLightest}` : Colors.white
-        } as Attributes)
-      }
-      return child
-    })
-  }, [children, isPressed])
+  const enhancedChildren = Children.map(children, (child) => {
+    if (isValidElement(child)) {
+      return cloneElement(child, {
+        stroke: isPressed ? `${Colors.grayLightest}` : Colors.white
+      } as Attributes)
+    }
+    return child
+  })
 
-  const iconButtonStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.default,
-        ...(center ? styles.center : {})
-      },
-      style
-    )
-  }, [center, style])
+  const iconButtonStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    {
+      ...styles.default,
+      ...(center ? styles.center : {})
+    },
+    style
+  )
 
   return (
     <TouchableOpacity

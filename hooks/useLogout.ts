@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { useCallback } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useAuthStore } from '@/store/auth'
@@ -19,7 +18,7 @@ function useLogout() {
     useShallow((state) => [state.setPinEnabled, state.setBiometricEnabled])
   )
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     authStoreLogout()
     clearWalletStore()
     queryClient.clear()
@@ -29,7 +28,7 @@ function useLogout() {
     setLoggedOut(true)
     if (router.canGoBack()) router.back()
     router.replace('/signin')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   return logout
 }

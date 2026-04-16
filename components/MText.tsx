@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import { type StyleProp, StyleSheet, Text, type TextStyle } from 'react-native'
 
 import { Colors, Sizes, Typography } from '@/styles'
@@ -25,29 +25,27 @@ function MText({
   children,
   ...props
 }: MTextProps) {
-  const textStyles = useMemo<StyleProp<TextStyle>>(() => {
-    let colorStyle = styles.colorWhite
-    if (color === 'muted') colorStyle = styles.colorMuted
-    if (color === 'bitcoin') colorStyle = styles.colorBitcoin
-    if (color === 'danger') colorStyle = styles.colorDanger
+  let colorStyle = styles.colorWhite
+  if (color === 'muted') colorStyle = styles.colorMuted
+  if (color === 'bitcoin') colorStyle = styles.colorBitcoin
+  if (color === 'danger') colorStyle = styles.colorDanger
 
-    let weightStyle: WeightStyle = styles.textRegular
-    if (weight === 'medium') weightStyle = styles.textMedium
-    if (weight === 'semibold') weightStyle = styles.textSemibold
-    if (weight === 'bold') weightStyle = styles.textBold
+  let weightStyle: WeightStyle = styles.textRegular
+  if (weight === 'medium') weightStyle = styles.textMedium
+  if (weight === 'semibold') weightStyle = styles.textSemibold
+  if (weight === 'bold') weightStyle = styles.textBold
 
-    return StyleSheet.compose(
-      {
-        ...styles.textBase,
-        ...colorStyle,
-        ...{ fontSize: Sizes.text.fontSize[size] },
-        ...{ lineHeight: Sizes.text.fontSize[size] + 6 },
-        ...weightStyle,
-        ...(center ? styles.alignCenter : {})
-      },
-      style
-    )
-  }, [color, size, weight, center, style])
+  const textStyles: StyleProp<TextStyle> = StyleSheet.compose(
+    {
+      ...styles.textBase,
+      ...colorStyle,
+      ...{ fontSize: Sizes.text.fontSize[size] },
+      ...{ lineHeight: Sizes.text.fontSize[size] + 6 },
+      ...weightStyle,
+      ...(center ? styles.alignCenter : {})
+    },
+    style
+  )
 
   return (
     <Text style={textStyles} {...props}>

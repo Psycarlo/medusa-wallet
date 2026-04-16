@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -16,32 +16,29 @@ function useTrySetLnbitsUrl() {
   const [loading, setLoading] = useState(false)
   const loggedOut = useAuthStore((state) => state.loggedOut)
 
-  const trySetLnbitsUrl = useCallback(
-    async (newLnbitsUrl: string) => {
-      if (newLnbitsUrl === lnbitsUrl) return
-      setLoading(true)
-      try {
-        const response = await fetch(newLnbitsUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+  const trySetLnbitsUrl = async (newLnbitsUrl: string) => {
+    if (newLnbitsUrl === lnbitsUrl) return
+    setLoading(true)
+    try {
+      const response = await fetch(newLnbitsUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
-        if (!response.ok)
-          throw new Error('Unable to connect to the lnbits server')
+      if (!response.ok)
+        throw new Error('Unable to connect to the lnbits server')
 
-        setLnbitsUrl(newLnbitsUrl)
-        if (!loggedOut) await logout()
-        toast.success(t('lnbitsUrlChangeSuccess'))
-      } catch {
-        toast.error(t('lnbitsUrlChangeError'))
-      } finally {
-        setLoading(false)
-      }
-    },
-    [] // eslint-disable-line react-hooks/exhaustive-deps
-  )
+      setLnbitsUrl(newLnbitsUrl)
+      if (!loggedOut) await logout()
+      toast.success(t('lnbitsUrlChangeSuccess'))
+    } catch {
+      toast.error(t('lnbitsUrlChangeError'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return { trySetLnbitsUrl, loading }
 }
