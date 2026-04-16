@@ -21,5 +21,9 @@ describe('number utils', () => {
       expect(number.getPercentageChange(100, 104.1)).toBe(4.1)
       expect(number.getPercentageChange(0.93, 0.94)).toBe(1.08)
     })
+
+    it('should return 1 decimal when result has exactly 1 decimal', () => {
+      expect(number.getPercentageChange(200, 203)).toBe(1.5)
+    })
   })
 })

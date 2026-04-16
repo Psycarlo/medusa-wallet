@@ -29,6 +29,11 @@ describe('format utils', () => {
     it('should return the correct localized number with decimals', () => {
       expect(formatNumber(0.795, 2)).toBe('0.80')
     })
+
+    it('should floor the number when floor is true', () => {
+      expect(formatNumber(3999.99, 0, true)).toBe('3,999')
+      expect(formatNumber(1.9, 0, true)).toBe('1')
+    })
   })
 
   describe('formatTime', () => {
@@ -70,6 +75,11 @@ describe('format utils', () => {
       expect(formatTimer(61)).toBe('00:01:01')
       expect(formatTimer(3601)).toBe('01:00:01')
       expect(formatTimer(6 * 60 * 60)).toBe('06:00:00')
+    })
+
+    it('should format without hours when withHours is false', () => {
+      expect(formatTimer(61, false)).toBe('01:01')
+      expect(formatTimer(3661, false)).toBe('01:01')
     })
   })
 })

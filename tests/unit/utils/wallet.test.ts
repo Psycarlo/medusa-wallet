@@ -34,6 +34,11 @@ describe('wallet utils', () => {
       expect(isDefaultWallet('1', [w1, w2])).toBeTruthy()
       expect(isDefaultWallet('1', [w2, w1])).toBeTruthy()
     })
+
+    it('should handle single wallet', () => {
+      expect(isDefaultWallet('1', [w1])).toBeTruthy()
+      expect(isDefaultWallet('2', [w1])).toBeFalsy()
+    })
   })
 
   describe('getDefaultWallet', () => {
