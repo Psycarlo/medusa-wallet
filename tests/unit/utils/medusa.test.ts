@@ -1,6 +1,13 @@
-import { getHistoricalPricesMap } from '@/utils/medusa'
+import { getHistoricalPricesMap, getPaylinkAddress } from '@/utils/medusa'
 
 describe('medusa utils', () => {
+  describe('getPaylinkAddress', () => {
+    it('should return the correct paylink address', () => {
+      expect(getPaylinkAddress('satoshi')).toBe('satoshi@medusa.bz')
+      expect(getPaylinkAddress('medusa')).toBe('medusa@medusa.bz')
+    })
+  })
+
   describe('getHistoricalPricesMap', () => {
     it('should return correct map', () => {
       const entries = [

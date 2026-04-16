@@ -16,6 +16,7 @@
     "lint": "expo lint",
     "start": "expo start --dev-client",
     "test": "pnpm test:unit && pnpm test:int",
+    "test:coverage": "jest ./tests/unit --coverage",
     "test:int": "jest ./tests/int",
     "test:unit": "jest ./tests/unit",
     "type-check": "tsc --noEmit"

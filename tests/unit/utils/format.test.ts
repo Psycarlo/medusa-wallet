@@ -1,6 +1,7 @@
 import {
   formatAddress,
   formatDate,
+  formatDateTime,
   formatNumber,
   formatTime,
   formatTimer
@@ -47,6 +48,19 @@ describe('format utils', () => {
 
     it('should work with number date', () => {
       expect(formatDate(1711639918000)).toBe('Mar 28, 2024')
+    })
+  })
+
+  describe('formatDateTime', () => {
+    it('should return the correct formatted date and time', () => {
+      expect(formatDateTime(new Date(1231006505000))).toBe(
+        'Jan 3, 2009, 6:15 PM'
+      )
+    })
+
+    it('should work with number timestamp', () => {
+      const result = formatDateTime(1711639918000)
+      expect(result).toContain('Mar 28, 2024')
     })
   })
 

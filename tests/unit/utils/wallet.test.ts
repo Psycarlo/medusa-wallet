@@ -1,5 +1,5 @@
 import { Wallet } from '@/types/wallet'
-import { isDefaultWallet } from '@/utils/wallet'
+import { getDefaultWallet, isDefaultWallet } from '@/utils/wallet'
 
 describe('wallet utils', () => {
   const w1: Wallet = {
@@ -33,6 +33,21 @@ describe('wallet utils', () => {
     it('should return true if it is the earliest wallet', () => {
       expect(isDefaultWallet('1', [w1, w2])).toBeTruthy()
       expect(isDefaultWallet('1', [w2, w1])).toBeTruthy()
+    })
+  })
+
+  describe('getDefaultWallet', () => {
+    it('should return null for empty wallets', () => {
+      expect(getDefaultWallet([])).toBeNull()
+    })
+
+    it('should return the only wallet when there is one', () => {
+      expect(getDefaultWallet([w2])).toBe(w2)
+    })
+
+    it('should return the earliest wallet regardless of order', () => {
+      expect(getDefaultWallet([w1, w2])).toBe(w1)
+      expect(getDefaultWallet([w2, w1])).toBe(w1)
     })
   })
 })
