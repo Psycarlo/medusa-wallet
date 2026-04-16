@@ -79,7 +79,7 @@ function BuyContent() {
   const createTransactionMutation = useMutation({
     mutationKey: ['createTransaction'],
     mutationFn: (addressUsername: string) =>
-      maxfy.createTransaction(
+      maxfy.createTransactionPI(
         getPaylinkAddress(addressUsername),
         customerEmail,
         selectedVoucher!
