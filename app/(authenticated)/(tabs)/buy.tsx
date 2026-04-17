@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Stack, useFocusEffect } from 'expo-router'
 import { useCallback, useRef, useState } from 'react'
 import { TextInput } from 'react-native'
+import { toast } from 'sonner-native'
 
 import maxfy from '@/api/maxfy'
 import medusa from '@/api/medusa'
@@ -84,46 +85,7 @@ function BuyContent() {
         getPaylinkAddress(addressUsername),
         customerEmail,
         selectedVoucher!
-      ),
-    onSuccess: async (transaction) => {
-      const { error: initError } = await initPaymentSheet({
-        merchantDisplayName: 'Medusa Wallet',
-        paymentIntentClientSecret: transaction.client_secret,
-        defaultBillingDetails: { email: transaction.customer_email },
-        appearance: {
-          colors: {
-            background: Colors.grayDarkest,
-            componentBackground: Colors.grayDarker,
-            componentDivider: Colors.grayDark,
-            primaryText: Colors.white,
-            secondaryText: Colors.grayDark,
-            componentText: Colors.white,
-            placeholderText: Colors.grayDark,
-            icon: Colors.bitcoin,
-          },
-          primaryButton: {
-            colors: {
-              background: Colors.bitcoin,
-            },
-          },
-        },
-      })
-
-      if (initError) {
-        console.log('initPaymentSheet error', initError)
-        return
-      }
-
-      const { error } = await presentPaymentSheet()
-
-      if (!error) {
-        setPaymentSuccess(true)
-      }
-    },
-    onError: (error) => {
-      // TODO: Handle error
-      console.log('Error', error)
-    }
+      )
   })
 
   useFocusEffect(
@@ -163,9 +125,52 @@ function BuyContent() {
     if (withClose) bottomSheetEmailRef.current?.close()
   }
 
-  function handleCheckout() {
+  async function handleCheckout() {
     if (!paylink) return
-    createTransactionMutation.mutate(paylink.username)
+
+    try {
+      const transaction = await createTransactionMutation.mutateAsync(
+        paylink.username
+      )
+
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'Medusa Wallet',
+        paymentIntentClientSecret: transaction.client_secret,
+        defaultBillingDetails: { email: transaction.customer_email },
+        appearance: {
+          colors: {
+            background: Colors.grayDarkest,
+            componentBackground: Colors.grayDarker,
+            componentDivider: Colors.grayDark,
+            primaryText: Colors.white,
+            secondaryText: Colors.grayDark,
+            componentText: Colors.white,
+            placeholderText: Colors.grayDark,
+            icon: Colors.bitcoin
+          },
+          primaryButton: {
+            colors: {
+              background: Colors.bitcoin
+            }
+          }
+        }
+      })
+
+      if (initError) {
+        toast.error(t('errorPayment'))
+        return
+      }
+
+      const { error } = await presentPaymentSheet()
+
+      if (!error) {
+        setPaymentSuccess(true)
+      }
+    } catch {
+      toast.error(t('errorPayment'))
+    } finally {
+      createTransactionMutation.reset()
+    }
   }
 
   return (
