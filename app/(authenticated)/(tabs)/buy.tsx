@@ -23,6 +23,7 @@ import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
+import { Colors } from '@/styles'
 import fiatUtils from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
 import { getPaylinkAddress } from '@/utils/medusa'
@@ -88,7 +89,24 @@ function BuyContent() {
       const { error: initError } = await initPaymentSheet({
         merchantDisplayName: 'Medusa Wallet',
         paymentIntentClientSecret: transaction.client_secret,
-        defaultBillingDetails: { email: transaction.customer_email }
+        defaultBillingDetails: { email: transaction.customer_email },
+        appearance: {
+          colors: {
+            background: Colors.grayDarkest,
+            componentBackground: Colors.grayDarker,
+            componentDivider: Colors.grayDark,
+            primaryText: Colors.white,
+            secondaryText: Colors.grayDark,
+            componentText: Colors.white,
+            placeholderText: Colors.grayDark,
+            icon: Colors.bitcoin,
+          },
+          primaryButton: {
+            colors: {
+              background: Colors.bitcoin,
+            },
+          },
+        },
       })
 
       if (initError) {
