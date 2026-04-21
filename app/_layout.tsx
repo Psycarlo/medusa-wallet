@@ -1,6 +1,5 @@
 import 'react-native-reanimated'
 
-import { useReactQueryDevTools } from '@dev-plugins/react-query'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import {
   onlineManager,
@@ -34,7 +33,6 @@ onlineManager.setEventListener((setOnline) => {
 })
 
 export default function RootLayout() {
-  useReactQueryDevTools(queryClient)
   useAppAuthentication()
 
   return (
