@@ -19,7 +19,7 @@
       },
       "package": "bz.medusa.wallet",
       "permissions": ["android.permission.CAMERA"],
-      "versionCode": 3
+      "versionCode": 4
     },
     "androidStatusBar": {
       "barStyle": "light-content",
