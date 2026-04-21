@@ -2,8 +2,8 @@
   "expo": {
     "name": "Medusa Wallet",
     "slug": "medusa-wallet",
-    "version": "0.3.0",
-    "newArchEnabled": false,
+    "version": "0.4.0",
+
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "medusa",
@@ -19,7 +19,7 @@
       },
       "package": "bz.medusa.wallet",
       "permissions": ["android.permission.CAMERA"],
-      "versionCode": 3
+      "versionCode": 4
     },
     "androidStatusBar": {
       "barStyle": "light-content",
@@ -64,10 +64,31 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.bz.medusa.wallet",
+          "enableGooglePay": false
+        }
+      ],
+      "expo-image",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "useHermesV1": false
+          },
+          "ios": {
+            "buildReactNativeFromSource": true,
+            "useHermesV1": true
+          }
+        }
+      ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {

@@ -70,6 +70,11 @@ export const PaymentSchema = z.object({
   webhook_status: z.number().optional().nullable()
 })
 
+export const PaginatedPaymentsSchema = z.object({
+  data: z.array(PaymentSchema),
+  total: z.number()
+})
+
 export const ConversionSchema = z
   .object({
     BTC: z.number(),

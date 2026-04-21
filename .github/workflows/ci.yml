@@ -22,11 +22,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
-      - name: test
-        run: pnpm test
+      - name: typecheck
+        run: pnpm type-check
 
       - name: lint
         run: pnpm lint
 
       - name: format
         run: pnpm format
+
+      - name: test
+        run: pnpm test

@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import {
   type StyleProp,
   StyleSheet,
@@ -30,29 +30,27 @@ function MButton({
   style,
   ...props
 }: MButtonProps) {
-  const buttonStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    let buttonVariantStyles = {}
-    if (variant === 'default') buttonVariantStyles = styles.defaultBase
-    if (variant === 'muted') buttonVariantStyles = styles.mutedBase
-    if (variant === 'ghost') buttonVariantStyles = styles.ghostBase
+  let buttonVariantStyles = {}
+  if (variant === 'default') buttonVariantStyles = styles.defaultBase
+  if (variant === 'muted') buttonVariantStyles = styles.mutedBase
+  if (variant === 'ghost') buttonVariantStyles = styles.ghostBase
 
-    let buttonSizeStyles =
-      variant !== 'ghost'
-        ? size === 'default'
-          ? styles.sizeDefaultBase
-          : styles.sizeSmallBase
-        : {}
+  let buttonSizeStyles =
+    variant !== 'ghost'
+      ? size === 'default'
+        ? styles.sizeDefaultBase
+        : styles.sizeSmallBase
+      : {}
 
-    return StyleSheet.compose(
-      {
-        ...styles.buttonBase,
-        ...buttonVariantStyles,
-        ...buttonSizeStyles,
-        ...(disabled ? styles.disabled : {})
-      },
-      style
-    )
-  }, [variant, size, disabled, style])
+  const buttonStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    {
+      ...styles.buttonBase,
+      ...buttonVariantStyles,
+      ...buttonSizeStyles,
+      ...(disabled ? styles.disabled : {})
+    },
+    style
+  )
 
   let underlayColor: string | undefined = Colors.bitcoinDark
   if (variant === 'muted') underlayColor = Colors.grayDarkest

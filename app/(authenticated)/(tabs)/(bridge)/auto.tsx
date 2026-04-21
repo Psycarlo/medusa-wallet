@@ -19,15 +19,16 @@ import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import useCreateAutoSwap from '@/hooks/mutation/useCreateAutoSwap'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import { Wallet } from '@/types/wallet'
 import fiatUtils from '@/utils/fiat'
@@ -37,10 +38,12 @@ import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Auto() {
   const router = useRouter()
-  const wallets = useWalletsStore((state) => state.wallets)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const wallets = userData?.wallets ?? []
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
-  const rate = useFiatStore((state) => state.rate)
+  const { data: rate } = useRate()
   const [fiatCurrency, bitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
@@ -70,12 +73,12 @@ export default function Auto() {
   const bottomSheetAmountRef = useRef<BottomSheet>(null)
 
   function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
+    const amountInSats = Math.ceil(Number(fiat) * (rate ?? 0))
     setLocalAmount(String(amountInSats))
   }
 
   function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
+    const amountInFiat = rate ? Number(sats) / rate : 0
     setLocalFiat(amountInFiat.toFixed(2))
   }
 
@@ -178,7 +181,7 @@ export default function Auto() {
                   </MText>
                   <MText color="muted" weight="medium">
                     {fiatUtils.getSymbol(fiatCurrency)}
-                    {formatNumber(rate && amount / rate, 2)}
+                    {formatNumber(rate ? amount / rate : 0, 2)}
                   </MText>
                 </MHStack>
               </MEmptyInputButton>
@@ -255,7 +258,7 @@ export default function Auto() {
               }
               fiat={Number(localFiat)}
               fiatCurrency={fiatCurrency}
-              rate={rate}
+              rate={rate ?? 0}
               onChangeType={(type) => setAmountType(type)}
             />
           </MFormLayout.Item>

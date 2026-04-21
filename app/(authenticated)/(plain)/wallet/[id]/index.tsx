@@ -12,12 +12,15 @@ import MIconButton from '@/components/MIconButton'
 import MText from '@/components/MText'
 import MTransactionCard from '@/components/MTransactionCard'
 import { WALLET_CARD_COLORS } from '@/config/colors'
+import usePayments from '@/hooks/query/usePayments'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import { useWalletsStore } from '@/store/wallets'
 import type { WalletSearchParams } from '@/types/searchParams'
@@ -28,28 +31,34 @@ export default function Wallet() {
   const router = useRouter()
   const { id } = useLocalSearchParams<WalletSearchParams>()
 
-  const [wallet, walletColors, updateWalletColor] = useWalletsStore(
-    useShallow((state) => [
-      state.wallets.find((wallet) => wallet.id === id),
-      state.walletColors,
-      state.updateWalletColor
-    ])
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const [walletColors, updateWalletColor] = useWalletsStore(
+    useShallow((state) => [state.walletColors, state.updateWalletColor])
   )
-  const rate = useFiatStore((state) => state.rate)
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
 
+  const { data: userData } = useUser(accessToken)
+  const wallet = userData?.wallets.find((w) => w.id === id)
+
+  const { data: rate } = useRate()
+
+  const { data: payments } = usePayments(accessToken, !!wallet)
+  const transactions = (payments ?? [])
+    .filter((t) => t.walletId === id)
+    .sort((a, b) => b.timestamp - a.timestamp)
+
   // Update color on wallets created in lnbits dashboard
   useEffect(() => {
-    if (!walletColors[wallet!.id])
-      updateWalletColor(wallet!.id, WALLET_CARD_COLORS[0])
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (wallet && !walletColors[wallet.id])
+      updateWalletColor(wallet.id, WALLET_CARD_COLORS[0])
+  }, [wallet?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!wallet) return <Redirect href="/" />
 
   return (
-    <MMainLayout>
+    <MMainLayout withPaddingBottom>
       <Stack.Screen
         options={{
           headerRight: () => (
@@ -82,36 +91,9 @@ export default function Wallet() {
             </MHStack>
             <MText>
               {fiat.getSymbol(fiatCurrency)}
-              {formatNumber(rate && wallet.balance / rate, 2)}
+              {formatNumber(rate ? wallet.balance / rate : 0, 2)}
             </MText>
           </MVStack>
-          {/* <MHStack>
-            <MVStack itemsCenter style={{ flex: 1, width: '50%' }}>
-              <MText>{t('totalAcquired')}</MText>
-              <MText size="lg" weight="medium">
-                {fiat.getSymbol(fiatCurrency)}
-                {formatNumber(
-                  rate &&
-                    wallet.transactions.reduce((acc, transaction) => {
-                      return (
-                        acc +
-                        (transaction.type === 'in'
-                          ? transaction.sats
-                          : -transaction.sats)
-                      )
-                    }, 0) / rate,
-                  2
-                )}
-              </MText>
-            </MVStack>
-            <MVStack itemsCenter style={{ flex: 1, width: '50%' }}>
-              <MText>{t('totalAccrued')}</MText>
-              <MText size="lg" weight="medium">
-                {fiat.getSymbol(fiatCurrency)}
-                {formatNumber(rate && wallet.balance / rate, 2)}
-              </MText>
-            </MVStack>
-          </MHStack> */}
         </MVStack>
         <MHStack justifyBetween style={{ marginVertical: 16 }}>
           <MActionButton
@@ -145,15 +127,15 @@ export default function Wallet() {
             {t('transactions')}
           </MText>
           <FlashList
-            data={wallet.transactions}
+            data={transactions}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <MTransactionCard
                 fiat={fiatCurrency}
                 transaction={item}
-                currentFiatPrice={rate && item.sats / rate}
+                currentFiatPrice={rate ? item.sats / rate : 0}
                 first={index === 0}
-                last={index === wallet.transactions!.length - 1}
+                last={index === transactions.length - 1}
                 onPress={() => {
                   router.navigate({
                     pathname: '/wallet/[id]/transaction/[tid]',
@@ -167,7 +149,6 @@ export default function Wallet() {
                 {t('noTransactions')}
               </MText>
             )}
-            estimatedItemSize={60}
           />
         </MVStack>
       </MVStack>

@@ -1,4 +1,4 @@
-import { CheckoutSchema, VouchersSchema } from '@/schemas/maxfy'
+import { CheckoutPISchema, VouchersSchema } from '@/schemas/maxfy'
 
 const BASE_URL = 'https://api.maxfy.app'
 const API_URL = `${BASE_URL}/v1`
@@ -29,23 +29,37 @@ async function getVouchers() {
   return []
 }
 
-async function createTransaction(
+async function createTransactionPI(
   lnaddress: string,
   email: string,
   voucherId: number
 ) {
-  const response = await fetch(
-    `${API_URL}/transactionAdd?lnaddress=${lnaddress}&email=${email}&voucher_id=${voucherId}`,
-    {
-      headers,
-      method: 'POST'
-    }
-  )
+  const body = new URLSearchParams({
+    lnaddress,
+    email,
+    voucher_id: String(voucherId)
+  })
+
+  const response = await fetch(`${API_URL}/transactionAddPI`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${credentials}`
+    },
+    body: body.toString()
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Create transaction failed: ${response.status} ${response.statusText}`
+    )
+  }
+
   const json = await response.json()
 
-  const data = CheckoutSchema.parse(json)
+  const data = CheckoutPISchema.parse(json)
 
   return data
 }
 
-export default { getVouchers, createTransaction }
+export default { getVouchers, createTransactionPI }

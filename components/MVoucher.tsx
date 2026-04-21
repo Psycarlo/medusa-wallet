@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import {
   type StyleProp,
   StyleSheet,
@@ -27,15 +27,13 @@ function MVoucher({
   style,
   ...props
 }: MVoucherProps) {
-  const buttonStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.buttonBase,
-        ...(selected ? styles.buttonSelected : styles.buttonUnselected)
-      },
-      style
-    )
-  }, [selected, style])
+  const buttonStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    {
+      ...styles.buttonBase,
+      ...(selected ? styles.buttonSelected : styles.buttonUnselected)
+    },
+    style
+  )
 
   return (
     <TouchableHighlight

@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native'
 
 import { Colors } from '@/styles'
@@ -6,9 +6,10 @@ import { Colors } from '@/styles'
 type MCenterProps = {} & React.ComponentPropsWithoutRef<typeof View>
 
 function MCenter({ children, style }: MCenterProps) {
-  const centerStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose({ ...styles.centerBase }, style)
-  }, [style])
+  const centerStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    { ...styles.centerBase },
+    style
+  )
 
   return <View style={centerStyles}>{children}</View>
 }

@@ -1,10 +1,16 @@
-import BottomSheet, {
+import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
+  BottomSheetModal,
   BottomSheetScrollView
 } from '@gorhom/bottom-sheet'
 import { type BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types'
-import { type ForwardedRef, forwardRef, useCallback } from 'react'
+import {
+  type ForwardedRef,
+  forwardRef,
+  useImperativeHandle,
+  useRef
+} from 'react'
 
 import MHStack from '@/layouts/MHStack'
 import MVStack from '@/layouts/MVStack'
@@ -26,28 +32,39 @@ function MBottomSheet(
   { title, snapPoints = ['50%'], onClose, children }: MBottomSheetProps,
   ref: ForwardedRef<BottomSheetMethods>
 ) {
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-      />
-    ),
-    []
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null)
+  // @ts-ignore
+  useImperativeHandle(ref, () => ({
+    expand: () => bottomSheetModalRef.current?.present(),
+    close: () => bottomSheetModalRef.current?.dismiss(),
+    collapse: () => bottomSheetModalRef.current?.dismiss(),
+    snapToIndex: (index: number) =>
+      bottomSheetModalRef.current?.snapToIndex(index),
+    snapToPosition: (position: string | number) =>
+      bottomSheetModalRef.current?.snapToPosition(position),
+    forceClose: () => bottomSheetModalRef.current?.dismiss()
+  }))
+
+  const renderBackdrop = (props: BottomSheetBackdropProps) => (
+    <BottomSheetBackdrop
+      {...props}
+      appearsOnIndex={0}
+      disappearsOnIndex={-1}
+      pressBehavior="close"
+    />
   )
 
   return (
-    <BottomSheet
-      ref={ref}
-      index={-1}
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
       snapPoints={snapPoints}
       backdropComponent={renderBackdrop}
       enablePanDownToClose
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
       backgroundStyle={{ backgroundColor: Colors.grayDarkest }}
       handleStyle={{ display: 'none' }}
-      onClose={onClose}
+      onDismiss={onClose}
     >
       <BottomSheetScrollView
         style={{
@@ -56,9 +73,9 @@ function MBottomSheet(
           paddingHorizontal: mainLayoutPaddingHorizontal
         }}
       >
-        <MVStack gap="lg">
+        <MVStack gap="lg" style={{ paddingBottom: 48 }}>
           <MHStack style={{ justifyContent: 'space-between' }}>
-            <MIconButton onPress={() => (ref as any)?.current?.close()}>
+            <MIconButton onPress={() => bottomSheetModalRef.current?.dismiss()}>
               <Close />
             </MIconButton>
             <MText size="lg" weight="medium">
@@ -71,7 +88,7 @@ function MBottomSheet(
           {children}
         </MVStack>
       </BottomSheetScrollView>
-    </BottomSheet>
+    </BottomSheetModal>
   )
 }
 

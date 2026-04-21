@@ -17,6 +17,7 @@ import {
   InkeyWebsocketSchema,
   InvoiceSchema,
   LnurlSchema,
+  PaginatedPaymentsSchema,
   PaylinkSchema,
   PaymentSchema,
   RateSchema,
@@ -35,8 +36,6 @@ import { generateRandomAddress } from '@/utils/random'
 import { tryCatch } from '@/utils/tryCatch'
 
 import medusa from './medusa'
-
-export const BASE_URL = 'https://wallet.medusa.bz'
 
 const headers = { 'Content-Type': 'application/json' }
 
@@ -242,7 +241,7 @@ async function rate(fiat: SupportedFiatCurrencies) {
 
     return result.data.rate
   } catch (_error) {
-    //
+    return 0
   }
 }
 
@@ -315,7 +314,6 @@ type GetPaginatedPaymentsOptions = {
   walletId?: string
 }
 
-// TODO: Implement https://github.com/lnbits/lnbits/pull/3132
 async function getPaginatedPayments(
   inkey: string,
   {
@@ -323,8 +321,7 @@ async function getPaginatedPayments(
     offset = 0,
     walletId = undefined
   }: GetPaginatedPaymentsOptions = {},
-  snapshots: Record<string, FiatSnapshot> = {},
-  addSnapshot: (timestamp: string, snapshot: FiatSnapshot) => void
+  snapshots: Record<string, FiatSnapshot> = {}
 ) {
   const url = new URL(`${getCurrentBaseUrl()}/api/v1/payments`)
   url.searchParams.append('status', 'success')
@@ -363,6 +360,7 @@ async function getPaginatedPayments(
   )
 
   const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
+  const newSnapshots: Record<string, FiatSnapshot> = {}
 
   for (const [timestamp, ids] of Object.entries(historicalPricesMap)) {
     let fiatSnapshot: FiatSnapshot
@@ -372,15 +370,15 @@ async function getPaginatedPayments(
     } else {
       const ts = Number(timestamp)
       fiatSnapshot = await medusa.getBitcoinPricesAt(ts)
+      newSnapshots[timestamp] = fiatSnapshot
     }
 
     for (const id of ids) {
       fiatSnapshotForIds[id] = fiatSnapshot
-      addSnapshot(timestamp, fiatSnapshot)
     }
   }
 
-  return data
+  const transactions = data
     .map((payment) => parse.fromLnbitsPaymentToTransaction(payment))
     .map((transaction) => ({
       ...transaction,
@@ -395,6 +393,93 @@ async function getPaginatedPayments(
         )
       ) as FiatSnapshot
     }))
+
+  return { transactions, newSnapshots }
+}
+
+type GetAllPaginatedPaymentsOptions = {
+  limit?: number
+  offset?: number
+}
+
+async function getAllPaginatedPayments(
+  accessToken: string,
+  {
+    limit = PAYMENTS_PER_FETCH,
+    offset = 0
+  }: GetAllPaginatedPaymentsOptions = {},
+  snapshots: Record<string, FiatSnapshot> = {}
+) {
+  const url = new URL(`${getCurrentBaseUrl()}/api/v1/payments/all/paginated`)
+  url.searchParams.append('status', 'success')
+  url.searchParams.append('direction', 'desc')
+  url.searchParams.append('limit', String(limit))
+  url.searchParams.append('offset', String(offset))
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...headers,
+      Cookie: `cookie_access_token=${accessToken}`
+    },
+    method: 'GET'
+  })
+  const json = await response.json()
+
+  const { data: parsed, error } = PaginatedPaymentsSchema.safeParse(json)
+
+  if (error) {
+    const errorData = ValidationErrorSchema.parse(json)
+
+    throw new Error(
+      typeof errorData.detail === 'string'
+        ? errorData.detail
+        : errorData.detail[0].msg
+    )
+  }
+
+  const historicalPricesMap = getHistoricalPricesMap(
+    parsed.data.map((payment) => ({
+      id: payment.payment_hash,
+      timestamp: new Date(payment.time).getTime()
+    }))
+  )
+
+  const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
+  const newSnapshots: Record<string, FiatSnapshot> = {}
+
+  for (const [timestamp, ids] of Object.entries(historicalPricesMap)) {
+    let fiatSnapshot: FiatSnapshot
+
+    if (snapshots[timestamp]) {
+      fiatSnapshot = snapshots[timestamp]
+    } else {
+      const ts = Number(timestamp)
+      fiatSnapshot = await medusa.getBitcoinPricesAt(ts)
+      newSnapshots[timestamp] = fiatSnapshot
+    }
+
+    for (const id of ids) {
+      fiatSnapshotForIds[id] = fiatSnapshot
+    }
+  }
+
+  const transactions = parsed.data
+    .map((payment) => parse.fromLnbitsPaymentToTransaction(payment))
+    .map((transaction) => ({
+      ...transaction,
+      fiatSnapshot: Object.fromEntries(
+        Object.entries(fiatSnapshotForIds[transaction.id]).map(
+          ([fiat, btcPrice]) => [
+            fiat,
+            Number(
+              ((transaction.sats / SATOSHIS_IN_BITCOIN) * btcPrice).toFixed(2)
+            )
+          ]
+        )
+      ) as FiatSnapshot
+    }))
+
+  return { transactions, total: parsed.total, newSnapshots }
 }
 
 // TODO: getPaymentByHash
@@ -807,6 +892,7 @@ export default {
   rate,
   getPayments,
   getPaginatedPayments,
+  getAllPaginatedPayments,
   getPaylinks,
   createPaylink,
   subscribePaymentWs,

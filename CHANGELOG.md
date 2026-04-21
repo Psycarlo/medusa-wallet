@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## v0.4.0
+
+### Added
+
+- Migrate from `expo v53` to `expo v55`;
+- Migrate from `react-native-sha256` to `expo-crypto`;
+- Implement missing biometric logic;
+- Use `@stripe/stripe-react-native` instead of web-view;
+- Implement `minSendable` and `maxSendable`;
+- Loading state in `swaps`.
+
+### Fixed
+
+- Keyboard overlapping inputs;
+- 0 fee showing as -0.
+
+### Changed
+
+- Server state handled only by `react-query`;
+- Use `/api/v1/payments/all/paginated` to fetch all payments in a single request.
+
+### Tests
+
+- Add more unit tests.
+
+### Improved
+
+- Settings page loading time.
+
 ## v0.3.0
 
 ### Added

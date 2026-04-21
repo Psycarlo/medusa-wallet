@@ -1,11 +1,4 @@
-import { useMemo } from 'react'
-import {
-  type StyleProp,
-  StyleSheet,
-  TouchableHighlight,
-  View,
-  type ViewStyle
-} from 'react-native'
+import { StyleSheet, TouchableHighlight, View } from 'react-native'
 
 import MHStack from '@/layouts/MHStack'
 import { Colors } from '@/styles'
@@ -25,22 +18,13 @@ export default function MOptionSelector({
   selected,
   setSelected
 }: MOptionSelectorProps) {
-  const optionStyle = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.optionBase
-      },
-      {}
-    )
-  }, [])
-
   return (
     <MHStack>
       {options.map((option) => (
         <TouchableHighlight
           key={option.value}
           style={[
-            optionStyle,
+            styles.optionBase,
             {
               borderWidth: selected === option.value ? 1 : 0,
               borderColor:

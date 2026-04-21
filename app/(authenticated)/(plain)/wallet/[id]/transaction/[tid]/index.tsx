@@ -3,14 +3,16 @@ import { Redirect, useLocalSearchParams } from 'expo-router'
 import Inbound from '@/components/icons/Inbound'
 import Outbound from '@/components/icons/Outbound'
 import MText from '@/components/MText'
+import usePayments from '@/hooks/query/usePayments'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import type { TransactionSearchParams } from '@/types/searchParams'
 import fiat from '@/utils/fiat'
@@ -19,13 +21,12 @@ import { formatAddress, formatDateTime, formatNumber } from '@/utils/format'
 export default function Transaction() {
   const { id, tid } = useLocalSearchParams<TransactionSearchParams>()
 
-  const wallet = useWalletsStore((state) =>
-    state.wallets.find((wallet) => wallet.id === id)
-  )
-  const transaction = wallet?.transactions.find(
-    (transaction) => transaction.id === tid
-  )
-  const rate = useFiatStore((state) => state.rate)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const wallet = userData?.wallets.find((w) => w.id === id)
+  const { data: payments } = usePayments(accessToken, !!wallet)
+  const transaction = payments?.find((t) => t.id === tid)
+  const { data: rate } = useRate()
   const fiatCurrency = useSettingsStore((state) => state.fiatCurrency)
   const { getFormattedBitcoinUnitAmount, getFormattedBitcoinUnitLabel } =
     useFormatBitcoinUnit()
@@ -67,10 +68,9 @@ export default function Transaction() {
               <MText size="lg" weight="medium">
                 {fiat.getSymbol(fiatCurrency)}
                 {formatNumber(
-                  (rate &&
-                    transaction.fiatSnapshot &&
+                  (transaction.fiatSnapshot &&
                     transaction.fiatSnapshot[fiatCurrency]) ||
-                    0 / rate,
+                    0,
                   2
                 )}
               </MText>
@@ -79,7 +79,7 @@ export default function Transaction() {
               <MText color="muted">{t('todaysPrice')}</MText>
               <MText size="lg" weight="medium">
                 {fiat.getSymbol(fiatCurrency)}
-                {formatNumber(rate && transaction.sats / rate, 2)}
+                {formatNumber(rate ? transaction.sats / rate : 0, 2)}
               </MText>
             </MVStack>
           </MHStack>
@@ -115,7 +115,7 @@ export default function Transaction() {
               <MText color="muted">{t('fee')}</MText>
               <MHStack gap="xs" style={{ width: 'auto' }}>
                 <MText weight="medium">
-                  {formatNumber(-transaction.fee, 0, true)}
+                  {formatNumber(-transaction.fee || 0, 0, true)}
                 </MText>
                 <MText color="muted">sats</MText>
               </MHStack>

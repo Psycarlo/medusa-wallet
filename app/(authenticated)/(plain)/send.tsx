@@ -1,8 +1,8 @@
 import BottomSheet from '@gorhom/bottom-sheet'
+import * as Crypto from 'expo-crypto'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { TouchableHighlight } from 'react-native'
-import { sha256 } from 'react-native-sha256'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -18,15 +18,16 @@ import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import usePay from '@/hooks/mutation/usePay'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import MCenter from '@/layouts/MCenter'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { Colors } from '@/styles'
 import { SendDetailsSearchParams } from '@/types/searchParams'
 import fiatUtils from '@/utils/fiat'
@@ -38,13 +39,13 @@ export default function Send() {
   const router = useRouter()
   const { walletId, invoice } = useLocalSearchParams<SendDetailsSearchParams>()
 
-  const wallets = useWalletsStore((state) => state.wallets)
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const { data: rate } = useRate()
+  const wallets = userData?.wallets ?? []
   const defaultWallet = getDefaultWallet(wallets)
   const lookupId = walletId || defaultWallet?.id
-  const wallet = useWalletsStore((state) =>
-    state.wallets.find((wallet) => wallet.id === lookupId)
-  )
-  const rate = useFiatStore((state) => state.rate)
+  const wallet = wallets.find((w) => w.id === lookupId)
   const [fiatCurrency, bitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
@@ -110,7 +111,10 @@ export default function Send() {
 
       setRecipient(foundIdentifier || '?')
       setDescription(foundDescription || '?')
-      const dHash = await sha256(foundDescription || '')
+      const dHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        foundDescription || ''
+      )
       setDescriptionHash(dHash)
       setMinSendable(decodedInvoice.data.minSendable || 0)
       setMaxSendable(decodedInvoice.data.maxSendable || 0)
@@ -151,16 +155,20 @@ export default function Send() {
 
   function handleOnPressMax() {
     if (!wallet) return
-    setLocalAmount(String(wallet.balance))
+    const max =
+      maxSendable > 0
+        ? Math.min(wallet.balance, Math.floor(maxSendable / 1000))
+        : wallet.balance
+    setLocalAmount(String(max))
   }
 
   function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
+    const amountInSats = Math.ceil(Number(fiat) * (rate ?? 0))
     setLocalAmount(String(amountInSats))
   }
 
   function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
+    const amountInFiat = rate ? Number(sats) / rate : 0
     setLocalFiat(amountInFiat.toFixed(2))
   }
 
@@ -208,8 +216,22 @@ export default function Send() {
 
   function handleConfirmAmount() {
     const amount = Number(localAmount)
-    setAmount(amount)
 
+    if (minSendable > 0 && amount < Math.ceil(minSendable / 1000)) {
+      toast.error(
+        t('errorAmountBelowMin', { min: Math.ceil(minSendable / 1000) })
+      )
+      return
+    }
+
+    if (maxSendable > 0 && amount > Math.floor(maxSendable / 1000)) {
+      toast.error(
+        t('errorAmountAboveMax', { max: Math.floor(maxSendable / 1000) })
+      )
+      return
+    }
+
+    setAmount(amount)
     setInsufficientFunds(amount > wallet!.balance)
     amountBottomSheetRef.current?.close()
   }
@@ -260,7 +282,7 @@ export default function Send() {
               </MHStack>
               <MText>
                 {fiatUtils.getSymbol(fiatCurrency)}
-                {formatNumber(rate && amount / rate, 2)}
+                {formatNumber(rate ? amount / rate : 0, 2)}
               </MText>
             </MVStack>
           </TouchableHighlight>
@@ -304,7 +326,7 @@ export default function Send() {
                     <MText weight="medium">{formatNumber(amount)} sats</MText>
                     <MText color="muted" weight="medium">
                       {fiatUtils.getSymbol(fiatCurrency)}
-                      {formatNumber(rate && amount / rate, 2)}
+                      {formatNumber(rate ? amount / rate : 0, 2)}
                     </MText>
                     {invoiceType === 'wellknown' && <Pencil />}
                   </MHStack>
@@ -378,7 +400,7 @@ export default function Send() {
               }
               fiat={Number(localFiat)}
               fiatCurrency={fiatCurrency}
-              rate={rate}
+              rate={rate ?? 0}
               withMax
               onPressMax={handleOnPressMax}
               onChangeType={(type) => setAmountType(type)}
@@ -405,7 +427,10 @@ export default function Send() {
       <MBottomSheet ref={commentBottomSheetRef} title={t('commentDescription')}>
         <MFormLayout style={{ gap: 12 }}>
           <MFormLayout.Item>
-            <MTextInput onChangeText={(text) => setLocalComment(text)} />
+            <MTextInput
+              bottomSheet
+              onChangeText={(text) => setLocalComment(text)}
+            />
             <MText center size="sm" color="muted">
               {t('commentAllowedCharacters', { chars: maxComment })}
             </MText>

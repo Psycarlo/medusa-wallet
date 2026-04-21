@@ -10,6 +10,7 @@ import MPinInput from '@/components/MPinInput'
 import MText from '@/components/MText'
 import { PIN_SIZE } from '@/config/auth'
 import { useAnimatedShake } from '@/hooks/useAnimatedShake'
+import useBiometric from '@/hooks/useBiometric'
 import useLogout from '@/hooks/useLogout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
@@ -35,6 +36,7 @@ export default function Unlock() {
     ])
   )
   const biometricEnabled = useSettingsStore((state) => state.biometricEnabled)
+  const { biometricAuth } = useBiometric()
   const logout = useLogout()
   const { shake, shakeStyle } = useAnimatedShake()
 
@@ -44,7 +46,17 @@ export default function Unlock() {
   function handleOnKeyPress(key: Keys) {
     if (key === 'DEL') setPin((prev) => prev.slice(0, -1))
     else if (typeof key === 'number') setPin((prev) => `${prev}${key}`)
-    else if (key === 'BIOMETRIC') console.log('todo: handle biometric')
+    else if (key === 'BIOMETRIC') {
+      async function handleBiometric() {
+        const success = await biometricAuth()
+        if (success) {
+          resetPinRetries()
+          setAuthTriggered(false)
+          router.replace('/')
+        }
+      }
+      handleBiometric()
+    }
   }
 
   useEffect(() => {

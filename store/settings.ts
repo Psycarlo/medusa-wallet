@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { BASE_URL as LNBITS_DEFAULT_URL } from '@/api/lnbits'
 import type { SupportedBitcoinUnits } from '@/config/bitcoin'
 import type { SupportedFiatCurrencies } from '@/config/fiat'
 import type { SupportedLanguages } from '@/config/language'
+import { BASE_URL as LNBITS_DEFAULT_URL } from '@/constants/lnbits'
 import { changeLocale, i18n } from '@/locales'
 import mmkvStorage from '@/storage/mmkv'
 

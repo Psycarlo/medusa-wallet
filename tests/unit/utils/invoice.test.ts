@@ -8,6 +8,10 @@ import {
 
 describe('invoice utils', () => {
   describe('isValidInvoice', () => {
+    it('should return false for empty input', () => {
+      expect(isValidInvoice('')).toBeFalsy()
+    })
+
     it('should validate lightning addresses', () => {
       const lnaddress1 = 'medusa@medusa.bz'
       const lnaddress2 = 'medusa@walletofsatoshi.com'
@@ -39,6 +43,16 @@ describe('invoice utils', () => {
 
       expect(isValidInvoice(bolt11_1)).toBeTruthy()
       expect(isValidInvoice(bolt11_2)).toBeTruthy()
+    })
+
+    it('should return false for invalid bolt11', () => {
+      expect(isValidInvoice('lnbc1invalidinvoice')).toBeFalsy()
+    })
+
+    it('should validate with lnurl: scheme prefix', () => {
+      const lnurlWithScheme =
+        'lnurl:LNURL1DP68GURN8GHJ7AMPD3KX2APWD4JKGATNVYHXY730D3H82UNVWQHNJ6Z5VFVHS7YRG52'
+      expect(isValidInvoice(lnurlWithScheme)).toBeTruthy()
     })
 
     it('should validate with lightning scheme', () => {

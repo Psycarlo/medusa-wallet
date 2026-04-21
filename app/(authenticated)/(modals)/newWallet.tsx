@@ -1,7 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 
 import lnbits from '@/api/lnbits'
 import MButton from '@/components/MButton'
@@ -10,32 +9,31 @@ import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import { WALLET_CARD_COLORS } from '@/config/colors'
 import { MAX_WALLET_NAME_LENGTH } from '@/config/wallet'
+import useUser from '@/hooks/query/useUser'
 import MFormLayout from '@/layouts/MFormLayout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import { useAuthStore } from '@/store/auth'
 import { useWalletsStore } from '@/store/wallets'
 
 export default function NewWallet() {
   const router = useRouter()
-  const [wallets, addWallet, updateWalletColor] = useWalletsStore(
-    useShallow((state) => [
-      state.wallets,
-      state.addWallet,
-      state.updateWalletColor
-    ])
-  )
+  const queryClient = useQueryClient()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const updateWalletColor = useWalletsStore((state) => state.updateWalletColor)
+
+  const { data: userData } = useUser(accessToken)
 
   const [walletName, setWalletName] = useState('')
   const [walletColorId, setWalletColorId] = useState(WALLET_CARD_COLORS[0].id)
 
   const createWalletMutation = useMutation({
     mutationKey: ['createWallet'],
-    mutationFn: () => lnbits.createWallet(walletName, wallets[0].adminkey),
+    mutationFn: () =>
+      lnbits.createWallet(walletName, userData!.wallets[0].adminkey),
     onSuccess: (wallet) => {
       if (!wallet) return
-
-      addWallet(wallet)
 
       const walletColor = WALLET_CARD_COLORS.find(
         (color) => color.id === walletColorId
@@ -43,6 +41,7 @@ export default function NewWallet() {
       if (walletColor) updateWalletColor(wallet.id, walletColor)
       else updateWalletColor(wallet.id, WALLET_CARD_COLORS[0])
 
+      queryClient.invalidateQueries({ queryKey: ['user'] })
       router.navigate('/')
     }
   })

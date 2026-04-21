@@ -91,6 +91,8 @@
   "enterPinAgain": "Introduz o PIN novamente",
   "enterWalletName": "introduz um nome",
   "enterYourPin": "Introduz o teu PIN",
+  "errorAmountAboveMax": "A quantidade máxima é {{max}} sats",
+  "errorAmountBelowMin": "A quantidade mínima é {{min}} sats",
   "errorCantChangeAmount": "Não podes mudar a quantidade",
   "errorCreateAutoSwap": "Erro ao criar troca automática. Apenas uma troca automática por carteira.",
   "errorCreateSwap": "Erro ao tentar criar troca. Verifica se tens sats suficientes.",

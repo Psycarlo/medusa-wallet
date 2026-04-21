@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native'
 
 import { Gap, gaps } from '@/styles/layout'
@@ -16,17 +16,15 @@ function MHStack({
   children,
   style
 }: MHStackProps) {
-  const stackStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.stackBase,
-        ...{ gap: gaps[gap] },
-        ...(justifyBetween ? styles.justifyBetween : {}),
-        ...(reverse ? styles.flexReverse : {})
-      },
-      style
-    )
-  }, [gap, justifyBetween, reverse, style])
+  const stackStyles: StyleProp<ViewStyle> = StyleSheet.compose(
+    {
+      ...styles.stackBase,
+      ...{ gap: gaps[gap] },
+      ...(justifyBetween ? styles.justifyBetween : {}),
+      ...(reverse ? styles.flexReverse : {})
+    },
+    style
+  )
 
   return <View style={stackStyles}>{children}</View>
 }

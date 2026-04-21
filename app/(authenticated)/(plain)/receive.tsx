@@ -24,18 +24,21 @@ import MTextInput from '@/components/MTextInput'
 import MTimer from '@/components/MTimer'
 import { EXPIRATION_TIME } from '@/config/medusa'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
+import usePaylinks from '@/hooks/query/usePaylinks'
+import useRate from '@/hooks/query/useRate'
+import useUser from '@/hooks/query/useUser'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { useFiatStore } from '@/store/fiat'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
-import { useWalletsStore } from '@/store/wallets'
 import { type ReceiveSearchParams } from '@/types/searchParams'
 import fiatUtils from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
 import { getPaylinkAddress } from '@/utils/medusa'
+import parse from '@/utils/parse'
 import { getDefaultWallet, isDefaultWallet } from '@/utils/wallet'
 
 // If no walletId is provided, the default wallet will be used
@@ -48,10 +51,16 @@ export default function Receive() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const { walletId } = useLocalSearchParams<ReceiveSearchParams>()
-  const [wallets, paylink] = useWalletsStore(
-    useShallow((state) => [state.wallets, state.paylink])
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { data: userData } = useUser(accessToken)
+  const wallets = userData?.wallets ?? []
+  const oldestWallet = parse.getOldestWallet(userData?.wallets)
+  const { data: paylinkData } = usePaylinks(
+    oldestWallet?.inkey ?? '',
+    !!oldestWallet
   )
-  const rate = useFiatStore((state) => state.rate)
+  const paylink = paylinkData?.[0]
+  const { data: rate } = useRate()
   const [fiatCurrency, bitcoinUnit] = useSettingsStore(
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
@@ -86,12 +95,12 @@ export default function Receive() {
   }
 
   function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
+    const amountInSats = Math.ceil(Number(fiat) * (rate ?? 0))
     setLocalAmount(String(amountInSats))
   }
 
   function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
+    const amountInFiat = rate ? Number(sats) / rate : 0
     setLocalFiat(amountInFiat.toFixed(2))
   }
 
@@ -307,7 +316,7 @@ export default function Receive() {
                 <MText weight="medium">{formatNumber(amount)} sats</MText>
                 <MText color="muted" weight="medium">
                   {fiatUtils.getSymbol(fiatCurrency)}
-                  {formatNumber(rate && amount / rate, 2)}
+                  {formatNumber(rate ? amount / rate : 0, 2)}
                 </MText>
               </MHStack>
             </MEmptyInputButton>
@@ -341,7 +350,7 @@ export default function Receive() {
               }
               fiat={Number(localFiat)}
               fiatCurrency={fiatCurrency}
-              rate={rate}
+              rate={rate ?? 0}
               onChangeType={(type) => setAmountType(type)}
             />
           </MFormLayout.Item>
@@ -373,6 +382,7 @@ export default function Receive() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item>
             <MTextInput
+              bottomSheet
               ref={sheetCommentRef}
               value={localComment}
               placeholder={t('commentDescription')}
