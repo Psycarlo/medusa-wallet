@@ -17,7 +17,7 @@ export const WellKnownSchema = z.object({
         return WellKnownMetadataSchema.parse(parsed)
       } catch {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: 'Invalid metadata JSON string'
         })
         return z.NEVER

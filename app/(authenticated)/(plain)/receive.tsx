@@ -1,8 +1,8 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
-import { Keyboard, TextInput } from 'react-native'
+import { useRef, useState } from 'react'
+import { Keyboard, type TextInputInstance } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -61,11 +61,14 @@ export default function Receive() {
     ? wallets.find((wallet) => wallet.id === walletId)
     : getDefaultWallet(wallets)
 
+  // Default wallet shows the paylink (lightning address), others need an invoice
   const [addressCopyType, setAddressCopyType] = useState<'address' | 'invoice'>(
-    'address'
+    defaultWallet ? 'address' : 'invoice'
   )
-  const [qrCodeValue, setQrCodeValue] = useState('')
-  const [isQrCodePlaceholder, setIsQrCodePlaceholder] = useState(false)
+  const [qrCodeValue, setQrCodeValue] = useState(
+    defaultWallet ? (paylink?.lnurl ?? '') : ''
+  )
+  const isQrCodePlaceholder = !defaultWallet
 
   const [amount, setAmount] = useState(0)
   const [comment, setComment] = useState('')
@@ -74,7 +77,7 @@ export default function Receive() {
   const [localFiat, setLocalFiat] = useState('0')
   const [localComment, setLocalComment] = useState('')
 
-  const sheetCommentRef = useRef<TextInput>(null)
+  const sheetCommentRef = useRef<TextInputInstance>(null)
   const bottomSheetAmountRef = useRef<BottomSheet>(null)
   const bottomSheetCommentRef = useRef<BottomSheet>(null)
 
@@ -215,23 +218,6 @@ export default function Receive() {
     setQrCodeValue(paylink!.lnurl)
     setAddressCopyType('address')
   }
-
-  function resetToInitial() {
-    setAmount(0)
-    setComment('')
-    setLocalAmount('0')
-    setLocalComment('')
-    if (defaultWallet) {
-      resetToLightningAddress()
-    } else {
-      setAddressCopyType('invoice')
-      setIsQrCodePlaceholder(true)
-    }
-  }
-
-  useEffect(() => {
-    resetToInitial()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!currentWallet || !paylink) return <Redirect href="/" />
 

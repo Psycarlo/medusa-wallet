@@ -119,8 +119,7 @@ const styles = StyleSheet.create({
     opacity: 0.4
   },
   hiddenText: {
-    opacity: 0,
-    visibility: 'hidden'
+    opacity: 0
   },
   activityIndicatorBase: {
     position: 'absolute'

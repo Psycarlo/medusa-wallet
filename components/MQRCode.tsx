@@ -47,13 +47,15 @@ export default function MQRCode({
   }
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(0.4, {
-        duration: 1000,
-        easing: Easing.linear
-      }),
-      -1,
-      true
+    opacity.set(
+      withRepeat(
+        withTiming(0.4, {
+          duration: 1000,
+          easing: Easing.linear
+        }),
+        -1,
+        true
+      )
     )
 
     return () => {

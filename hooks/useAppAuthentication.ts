@@ -40,7 +40,9 @@ import { useSettingsStore } from '@/store/settings'
  */
 function useAppAuthentication() {
   const coldStart = useRef(true)
-  const appState = useRef(AppState.currentState)
+  const appState = useRef<AppStateStatus>(
+    (AppState.currentState as AppStateStatus | null) ?? 'unknown'
+  )
   const router = useRouter()
   const pathname = usePathname()
   const lastRoute = useRef<string | null>(null)
@@ -149,7 +151,7 @@ function useAppAuthentication() {
 
   useEffect(() => {
     if (coldStart.current) {
-      handleAppStateChanged(AppState.currentState)
+      handleAppStateChanged(appState.current)
       coldStart.current = false
     }
 

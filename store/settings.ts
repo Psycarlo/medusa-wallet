@@ -6,7 +6,7 @@ import type { SupportedBitcoinUnits } from '@/config/bitcoin'
 import type { SupportedFiatCurrencies } from '@/config/fiat'
 import type { SupportedLanguages } from '@/config/language'
 import { changeLocale, i18n } from '@/locales'
-import mmkvStorage from '@/storage/mmkv'
+import { mmkvStorage } from '@/storage/mmkv'
 
 type SettingsState = {
   language: SupportedLanguages

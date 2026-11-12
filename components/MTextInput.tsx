@@ -3,6 +3,7 @@ import {
   type StyleProp,
   StyleSheet,
   TextInput,
+  type TextInputInstance,
   type TextStyle,
   TouchableOpacity,
   View
@@ -17,7 +18,7 @@ type MTextInputProps = React.ComponentPropsWithoutRef<typeof TextInput>
 
 function MTextInput(
   { style, secureTextEntry, maxLength, ...props }: MTextInputProps,
-  ref: ForwardedRef<TextInput>
+  ref: ForwardedRef<TextInputInstance>
 ) {
   const [isSecure, setIsSecure] = useState(!!secureTextEntry)
 

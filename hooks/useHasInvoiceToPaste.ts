@@ -1,11 +1,13 @@
 import * as Clipboard from 'expo-clipboard'
 import { useEffect, useRef, useState } from 'react'
-import { AppState } from 'react-native'
+import { AppState, type AppStateStatus } from 'react-native'
 
 import { isValidInvoice } from '@/utils/invoice'
 
 function useHasInvoiceToPaste() {
-  const appState = useRef(AppState.currentState)
+  const appState = useRef<AppStateStatus>(
+    (AppState.currentState as AppStateStatus | null) ?? 'unknown'
+  )
   const [hasInvoiceToPaste, setHasInvoiceToPaste] = useState(false)
   const [invoiceValue, setInvoiceValue] = useState('')
 

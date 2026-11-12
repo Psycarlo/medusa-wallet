@@ -347,7 +347,6 @@ export default function Lightning() {
                 {t('noTransactions')}
               </MText>
             )}
-            estimatedItemSize={60}
             refreshControl={
               <RefreshControl
                 refreshing={userIsFetching || paymentsIsFetching}

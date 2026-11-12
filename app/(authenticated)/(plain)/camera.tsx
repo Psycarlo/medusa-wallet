@@ -68,7 +68,7 @@ export default function Camera() {
   )
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
+    <View style={StyleSheet.absoluteFill}>
       <Stack.Screen
         options={{
           headerTitle: () => (
@@ -85,7 +85,7 @@ export default function Camera() {
       />
       <CameraView
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onBarcodeScanned={handleOnBarcodeScanned}
       />
       <MCameraOverlay active={permission?.granted} />

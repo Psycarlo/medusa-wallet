@@ -1,4 +1,5 @@
-import { Redirect, Tabs, useRouter } from 'expo-router'
+import { Redirect, useRouter } from 'expo-router'
+import { Tabs } from 'expo-router/js-tabs'
 import { View } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -24,7 +25,6 @@ export default function TabsLayout() {
   return (
     <View style={{ flex: 1 }}>
       <Tabs
-        initialRouteName="index"
         screenOptions={{
           sceneStyle: {
             backgroundColor: Colors.dark

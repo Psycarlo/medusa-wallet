@@ -16,7 +16,7 @@ export const ValidationErrorSchema = z.object({
 })
 
 export const AuthSchema = z.object({
-  access_token: z.string().jwt()
+  access_token: z.jwt()
 })
 
 export const WalletSchema = z.object({
@@ -64,7 +64,7 @@ export const PaymentSchema = z.object({
   preimage: z.string().optional().nullable(),
   payment_hash: z.string(),
   expiry: z.string().optional().nullable(),
-  object: z.record(z.any()).default({}),
+  object: z.record(z.string(), z.any()).default({}),
   wallet_id: z.string(),
   webhook: z.string().optional().nullable(),
   webhook_status: z.number().optional().nullable()
@@ -77,7 +77,7 @@ export const ConversionSchema = z
   })
   .and(
     z
-      .record(z.enum(SUPPORTED_FIAT_CURRENCIES), z.number())
+      .partialRecord(z.enum(SUPPORTED_FIAT_CURRENCIES), z.number())
       .refine((data) => Object.keys(data).length === 1)
   )
 

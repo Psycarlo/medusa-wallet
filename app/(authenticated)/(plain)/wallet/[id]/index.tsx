@@ -160,7 +160,6 @@ export default function Wallet() {
                 {t('noTransactions')}
               </MText>
             )}
-            estimatedItemSize={60}
           />
         </MVStack>
       </MVStack>

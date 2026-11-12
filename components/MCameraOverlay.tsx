@@ -1,54 +1,63 @@
-import {
-  Canvas,
-  DiffRect,
-  rect,
-  RoundedRect,
-  rrect
-} from '@shopify/react-native-skia'
-import { Platform, StyleSheet, useWindowDimensions } from 'react-native'
+import { StyleSheet, useWindowDimensions } from 'react-native'
+import Svg, { Path, Rect } from 'react-native-svg'
 
 import { Colors } from '@/styles'
 
-type SSCameraOverlayProps = {
+type MCameraOverlayProps = {
   dimension?: number
   active?: boolean
 }
 
+const TOP_OFFSET = 32
+const RADIUS = 10
+
 export default function MCameraOverlay({
   dimension = 320,
   active
-}: SSCameraOverlayProps) {
+}: MCameraOverlayProps) {
   const { width, height } = useWindowDimensions()
 
-  const outer = rrect(rect(0, 0, width, height), 0, 0)
-  const inner = rrect(
-    rect(width / 2 - dimension / 2, 32, dimension, dimension),
-    10,
-    10
-  )
+  const x = width / 2 - dimension / 2
+  const y = TOP_OFFSET
+  const r = RADIUS
+
+  // Full-screen rect with a rounded-rect hole (even-odd fill)
+  const maskPath = [
+    `M0 0H${width}V${height}H0Z`,
+    `M${x + r} ${y}H${x + dimension - r}`,
+    `A${r} ${r} 0 0 1 ${x + dimension} ${y + r}`,
+    `V${y + dimension - r}`,
+    `A${r} ${r} 0 0 1 ${x + dimension - r} ${y + dimension}`,
+    `H${x + r}`,
+    `A${r} ${r} 0 0 1 ${x} ${y + dimension - r}`,
+    `V${y + r}`,
+    `A${r} ${r} 0 0 1 ${x + r} ${y}Z`
+  ].join('')
 
   return (
-    <Canvas
-      style={
-        Platform.OS === 'android' ? { flex: 1 } : StyleSheet.absoluteFillObject
-      }
+    <Svg
+      width={width}
+      height={height}
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
     >
-      <DiffRect
-        inner={inner}
-        outer={outer}
-        color={Colors.black}
-        opacity={0.8}
+      <Path
+        d={maskPath}
+        fill={Colors.black}
+        fillOpacity={0.8}
+        fillRule="evenodd"
       />
-      <RoundedRect
-        x={width / 2 - dimension / 2}
-        y={32}
-        height={dimension}
+      <Rect
+        x={x}
+        y={y}
         width={dimension}
-        r={10}
-        color={active ? Colors.white : Colors.grayDarker}
+        height={dimension}
+        rx={r}
+        ry={r}
+        fill="none"
+        stroke={active ? Colors.white : Colors.grayDarker}
         strokeWidth={2}
-        style="stroke"
       />
-    </Canvas>
+    </Svg>
   )
 }

@@ -6,22 +6,23 @@ import {
   QueryClient,
   QueryClientProvider
 } from '@tanstack/react-query'
-import * as NavigationBar from 'expo-navigation-bar'
 import * as Network from 'expo-network'
 import { Slot } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
 import * as SystemUI from 'expo-system-ui'
-import { Platform, StyleSheet } from 'react-native'
+import { useCallback } from 'react'
+import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Toaster } from 'sonner-native'
 
 import useAppAuthentication from '@/hooks/useAppAuthentication'
 import { Colors } from '@/styles'
 
-NavigationBar.setBackgroundColorAsync(Colors.dark)
+SplashScreen.preventAutoHideAsync()
+SplashScreen.setOptions({ duration: 300, fade: true })
 
-if (Platform.OS === 'android') {
-  SystemUI.setBackgroundColorAsync(Colors.dark)
-}
+SystemUI.setBackgroundColorAsync(Colors.dark)
 
 const queryClient = new QueryClient()
 
@@ -36,9 +37,12 @@ export default function RootLayout() {
   useReactQueryDevTools(queryClient)
   useAppAuthentication()
 
+  const handleLayout = useCallback(() => SplashScreen.hide(), [])
+
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={styles.container}>
+      <GestureHandlerRootView style={styles.container} onLayout={handleLayout}>
+        <StatusBar style="light" />
         <Slot />
         <Toaster
           theme="dark"
