@@ -3,7 +3,6 @@ import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
-import CreditCard from '@/components/icons/CreditCard'
 import Ellipsis from '@/components/icons/Ellipsis'
 import Receive from '@/components/icons/Receive'
 import Send from '@/components/icons/Send'
@@ -132,12 +131,6 @@ export default function Wallet() {
             }
           >
             <Send />
-          </MActionButton>
-          <MActionButton
-            text={t('buy')}
-            onPress={() => router.navigate('/buy')}
-          >
-            <CreditCard width={16} height={16} active />
           </MActionButton>
         </MHStack>
         <MVStack style={{ flex: 1 }}>

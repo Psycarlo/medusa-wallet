@@ -3,7 +3,6 @@ import { View } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
 import Bridge from '@/components/icons/Bridge'
-import CreditCard from '@/components/icons/CreditCard'
 import Scan from '@/components/icons/Scan'
 import Settings from '@/components/icons/Settings'
 import Zap from '@/components/icons/Zap'
@@ -65,13 +64,6 @@ export default function TabsLayout() {
           options={{
             title: t('wallets'),
             tabBarIcon: ({ focused }) => <Zap active={focused} />
-          }}
-        />
-        <Tabs.Screen
-          name="buy"
-          options={{
-            title: t('buySats'),
-            tabBarIcon: ({ focused }) => <CreditCard active={focused} />
           }}
         />
         <Tabs.Screen

@@ -8,7 +8,6 @@ import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
 import lnbits from '@/api/lnbits'
-import CreditCard from '@/components/icons/CreditCard'
 import Receive from '@/components/icons/Receive'
 import Send from '@/components/icons/Send'
 import MActionButton from '@/components/MActionButton'
@@ -266,12 +265,6 @@ export default function Lightning() {
             onPress={() => router.navigate('/camera')}
           >
             <Send />
-          </MActionButton>
-          <MActionButton
-            text={t('buy')}
-            onPress={() => router.navigate('/buy')}
-          >
-            <CreditCard width={16} height={16} active />
           </MActionButton>
         </MHStack>
         <MVStack>

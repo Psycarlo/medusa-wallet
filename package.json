@@ -67,7 +67,6 @@
     "react-native-svg": "15.11.2",
     "react-native-tab-view": "^4.2.0",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5",
     "react-timeago": "^7.2.0",
     "sonner-native": "^0.17.0",
     "zod": "^3.24.1",
