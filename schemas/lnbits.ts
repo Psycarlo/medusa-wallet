@@ -65,7 +65,7 @@ export const PaymentSchema = z.object({
   object: z.record(z.string(), z.any()).default({}),
   wallet_id: z.string(),
   webhook: z.string().optional().nullable(),
-  webhook_status: z.number().optional().nullable()
+  webhook_status: z.union([z.string(), z.number()]).nullish()
 })
 
 export const RateSchema = z.object({

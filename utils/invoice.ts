@@ -9,8 +9,14 @@ const BOLT11_SCHEME = 'lnbc'
 const LNURL_SCHEME = 'lnurl'
 export const LIGHTNING_ADDRESS_REGEX = /\S+@\S+\.\S+/
 
+// `lightning:user@domain.com` -> `user@domain.com`
+function stripLightningScheme(value: string) {
+  return value.trim().replace(/^lightning:/i, '')
+}
+
 function isValidInvoice(invoice: string) {
   if (!invoice) return false
+  invoice = stripLightningScheme(invoice)
 
   const normalizedInvoice = invoice.trim().toLowerCase()
   let requestCode = normalizedInvoice
@@ -52,6 +58,7 @@ type DecodeInvoiceReturn =
 
 async function decodeInvoice(invoice: string): Promise<DecodeInvoiceReturn> {
   if (!invoice) return false
+  invoice = stripLightningScheme(invoice)
 
   const normalizedInvoice = invoice.trim().toLowerCase()
   let requestCode = normalizedInvoice

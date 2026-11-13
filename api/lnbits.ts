@@ -535,6 +535,8 @@ async function payInvoice(invoice: string, adminkey: string) {
     )
   }
 
+  if (data.status === 'failed') throw new Error('Payment failed')
+
   return data
 }
 
@@ -696,7 +698,8 @@ async function createSwap(data: CreateSwapData, adminkey: string) {
           wallet: data.walletId,
           amount: data.amount,
           refund_address: data.address,
-          feerate: false
+          feerate: false,
+          direction: data.amountOption
         })
 
   const response = await fetch(url, {
