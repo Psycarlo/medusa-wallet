@@ -32,7 +32,10 @@ function usePinEntry(
     let active = true
 
     async function check() {
-      const accepted = await onCompleteRef.current(state.digits)
+      // A failed check (e.g. secure storage error) must not freeze the PIN pad
+      const accepted = await Promise.resolve(state.digits)
+        .then(onCompleteRef.current)
+        .catch(() => false)
       if (!active || accepted === undefined) return
       if (accepted) return dispatch({ type: 'ACCEPTED' })
 
