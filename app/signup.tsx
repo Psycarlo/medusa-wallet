@@ -113,7 +113,7 @@ export default function Signup() {
                     size="sm"
                     weight="medium"
                     center
-                    onPress={() => router.navigate('/signin')}
+                    onPress={() => router.replace('/signin')}
                   >
                     {t('signIn')}
                   </MText>
