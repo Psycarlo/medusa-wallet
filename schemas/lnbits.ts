@@ -58,7 +58,7 @@ export const PaymentSchema = z.object({
   checking_id: z.string(),
   amount: z.number(),
   fee: z.number(),
-  memo: z.string(),
+  memo: z.string().nullish(),
   time: z.string(),
   bolt11: z.string(),
   preimage: z.string().optional().nullable(),
@@ -123,7 +123,7 @@ export const PaylinkSchema = z.array(
     description: z.string(),
     min: z.number(),
     max: z.number(),
-    username: z.string(),
+    username: z.string().nullish(),
     comment_chars: z.number(),
     lnurl: z.string()
   })

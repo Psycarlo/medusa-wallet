@@ -33,7 +33,14 @@ const useFiatStore = create<FiatState & FiatActions>()(
     }),
     {
       name: 'medusa-fiat',
-      storage: createJSONStorage(() => mmkvStorage)
+      storage: createJSONStorage(() => mmkvStorage),
+      // v1: snapshots are keyed by unix seconds. Older snapshots were fetched
+      // with millisecond timestamps and hold wrong (current) prices.
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = persistedState as FiatState
+        return version < 1 ? { ...state, snapshots: {} } : state
+      }
     }
   )
 )

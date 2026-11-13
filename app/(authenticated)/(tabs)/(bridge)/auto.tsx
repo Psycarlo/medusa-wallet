@@ -1,24 +1,23 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
-import { useQuery } from '@tanstack/react-query'
 import { Stack, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
-import { ScrollView } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { useShallow } from 'zustand/react/shallow'
 
-import lnbits from '@/api/lnbits'
 import History from '@/components/icons/History'
 import Pencil from '@/components/icons/Pencil'
-import MAmountDisplay, { MAmountDisplayType } from '@/components/MAmountDisplay'
+import MAmountDisplay from '@/components/MAmountDisplay'
 import MBottomSheet from '@/components/MBottomSheet'
 import MButton from '@/components/MButton'
 import MEmptyInputButton from '@/components/MEmptyInputButton'
 import MIconButton from '@/components/MIconButton'
-import MNumPad, { Keys } from '@/components/MNumPad'
+import MNumPad from '@/components/MNumPad'
 import MSheetSelector from '@/components/MSheetSelector'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
-import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import useCreateAutoSwap from '@/hooks/mutation/useCreateAutoSwap'
+import useBoltzConfig from '@/hooks/query/useBoltzConfig'
+import useAmountInput from '@/hooks/useAmountInput'
 import useFormatBitcoinUnit from '@/hooks/useFormatBitcoinUnit'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
@@ -45,97 +44,50 @@ export default function Auto() {
     useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
   )
 
-  const { data: boltzConfig } = useQuery({
-    queryKey: ['boltz-config'],
-    queryFn: () => lnbits.getBoltzConfig()
-  })
-
   const defaultWallet = getDefaultWallet(wallets)
-  const [selectedWallet, setSelectedWallet] = useState<Wallet | undefined>(
-    defaultWallet || undefined
-  )
+  const [selectedWalletId, setSelectedWalletId] = useState<Wallet['id']>()
+  const selectedWallet =
+    wallets.find((wallet) => wallet.id === selectedWalletId) ??
+    defaultWallet ??
+    undefined
 
-  const autoSwapMutation = useCreateAutoSwap(selectedWallet?.adminkey!)
+  const autoSwapMutation = useCreateAutoSwap(selectedWallet?.adminkey ?? '')
 
   const [amount, setAmount] = useState(0)
-  const [amountType, setAmountType] = useState<MAmountDisplayType>('btc')
-  const [localAmount, setLocalAmount] = useState('0')
-  const [localFiat, setLocalFiat] = useState('0')
+  const { data: boltzConfig, isError: boltzUnavailable } = useBoltzConfig()
+  const limits = boltzConfig?.['BTC/BTC'].limits
+  const amountOutOfLimits =
+    !!limits &&
+    amount > 0 &&
+    (amount < limits.minimal || amount > limits.maximal)
+  const amountInput = useAmountInput(rate, bitcoinUnit)
   const [address, setAddress] = useState('')
 
   const disabled =
-    !amount || !address || !validation.isValidBitcoinAddress(address)
+    boltzUnavailable ||
+    amountOutOfLimits ||
+    !selectedWallet ||
+    !amount ||
+    !address ||
+    !validation.isValidBitcoinAddress(address)
 
   const bottomSheetWalletRef = useRef<BottomSheet>(null)
   const bottomSheetAmountRef = useRef<BottomSheet>(null)
 
-  function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
-    setLocalAmount(String(amountInSats))
-  }
-
-  function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
-    setLocalFiat(amountInFiat.toFixed(2))
-  }
-
-  // TODO: Refactor/Extract
-  function handleOnKeyPress(key: Keys) {
-    if (amountType === 'btc') {
-      if (key === 'DEL') {
-        const newValue = localAmount.length > 1 ? localAmount.slice(0, -1) : '0'
-        syncFiatWithSats(newValue)
-        setLocalAmount(newValue)
-      } else if (key === ',') {
-        if (!localAmount.includes('.')) {
-          setLocalAmount((prev) => (prev === '0' ? '0.' : prev + '.'))
-        }
-      } else if (typeof key === 'number') {
-        setLocalAmount((prev) => {
-          const newValue = prev === '0' ? key.toString() : prev + key.toString()
-          syncFiatWithSats(newValue)
-          return newValue
-        })
-      }
-    } else if (amountType === 'fiat') {
-      if (key === 'DEL') {
-        const newValue = localFiat.length > 1 ? localFiat.slice(0, -1) : '0'
-        syncSatsWithFiat(newValue)
-        setLocalFiat(newValue)
-      } else if (key === ',') {
-        if (!localFiat.includes('.')) {
-          setLocalFiat((prev) => (prev === '0' ? '0.' : prev + '.'))
-        }
-      } else if (typeof key === 'number') {
-        setLocalFiat((prev) => {
-          const decimalParts = prev.split('.')
-          const hasDecimal = decimalParts.length > 1
-          const decimalPlaces = hasDecimal ? decimalParts[1].length : 0
-
-          if (hasDecimal && decimalPlaces >= 2) return prev
-
-          const newValue = prev === '0' ? key.toString() : prev + key.toString()
-          syncSatsWithFiat(newValue)
-          return newValue
-        })
-      }
-    }
-  }
-
   function handleConfirmAmount() {
-    const satsAmount = Number(localAmount)
-    if (satsAmount && satsAmount > 0) {
+    const satsAmount = amountInput.sats
+    if (satsAmount > 0) {
       setAmount(satsAmount)
     } else {
       setAmount(0)
-      setLocalAmount('0')
+      amountInput.reset()
     }
     bottomSheetAmountRef.current?.close()
   }
 
   function handleClearAmount() {
     setAmount(0)
-    setLocalAmount('0')
+    amountInput.reset()
     bottomSheetAmountRef.current?.close()
   }
 
@@ -150,7 +102,11 @@ export default function Auto() {
           )
         }}
       />
-      <ScrollView style={{ marginTop: 16 }}>
+      <KeyboardAwareScrollView
+        style={{ marginTop: 16 }}
+        bottomOffset={24}
+        keyboardShouldPersistTaps="handled"
+      >
         <MVStack itemsCenter gap="md">
           <MFormLayout style={{ gap: 12 }}>
             <MFormLayout.Item>
@@ -184,12 +140,18 @@ export default function Auto() {
               </MEmptyInputButton>
               <MHStack style={{ justifyContent: 'space-between' }}>
                 {boltzConfig && (
-                  <MText size="xs" color="muted">
+                  <MText
+                    size="xs"
+                    color={amountOutOfLimits ? 'danger' : 'muted'}
+                  >
                     Min: {formatNumber(boltzConfig['BTC/BTC'].limits.minimal)}
                   </MText>
                 )}
                 {boltzConfig && (
-                  <MText size="xs" color="muted">
+                  <MText
+                    size="xs"
+                    color={amountOutOfLimits ? 'danger' : 'muted'}
+                  >
                     Max: {formatNumber(boltzConfig['BTC/BTC'].limits.maximal)}
                   </MText>
                 )}
@@ -206,20 +168,25 @@ export default function Auto() {
               />
             </MFormLayout.Item>
           </MFormLayout>
+          {boltzUnavailable && (
+            <MText size="sm" color="danger" center>
+              {t('swapsUnavailable')}
+            </MText>
+          )}
           <MButton
             text={t('createAutoSwap')}
             disabled={disabled}
             loading={autoSwapMutation.isPending}
             onPress={() =>
               autoSwapMutation.mutate({
-                walletId: selectedWallet?.id!,
+                walletId: selectedWallet?.id ?? '',
                 amount,
                 address
               })
             }
           />
         </MVStack>
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <MBottomSheet
         ref={bottomSheetWalletRef}
         title={t('selectWallet')}
@@ -234,7 +201,7 @@ export default function Auto() {
           }))}
           selectedId={selectedWallet?.id}
           onSelect={(id) => {
-            setSelectedWallet(wallets.find((wallet) => wallet.id === id))
+            setSelectedWalletId(id)
             bottomSheetWalletRef.current?.close()
           }}
         />
@@ -248,19 +215,19 @@ export default function Auto() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item>
             <MAmountDisplay
-              type={amountType}
-              sats={
-                Number(localAmount) *
-                (bitcoinUnit === 'btc' ? SATOSHIS_IN_BITCOIN : 1)
-              }
-              fiat={Number(localFiat)}
+              type={amountInput.amountType}
+              sats={amountInput.sats}
+              fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}
-              onChangeType={(type) => setAmountType(type)}
+              onChangeType={amountInput.setAmountType}
             />
           </MFormLayout.Item>
           <MFormLayout.Item>
-            <MNumPad type={bitcoinUnit} onKeyPress={handleOnKeyPress} />
+            <MNumPad
+              type={amountInput.numPadType}
+              onKeyPress={amountInput.handleKeyPress}
+            />
           </MFormLayout.Item>
           <MFormLayout.Item>
             <MButton text={t('confirmAmount')} onPress={handleConfirmAmount} />

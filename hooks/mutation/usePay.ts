@@ -16,11 +16,10 @@ function usePay(adminkey: string) {
       toast.success(t('successPayment'))
       queryClient.invalidateQueries({ queryKey: ['user'] })
       queryClient.invalidateQueries({ queryKey: ['payments'] })
-      queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })
       router.navigate('/')
     },
-    onError: () => {
-      toast.error(t('errorPayment'))
+    onError: (error) => {
+      toast.error(t('errorPayment'), { description: error.message })
       router.navigate('/')
     }
   })

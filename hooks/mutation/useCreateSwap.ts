@@ -15,8 +15,8 @@ function useCreateSwap(adminkey: string) {
       toast.success(t('createdSwap'))
       router.navigate('/swaps')
     },
-    onError: () => {
-      toast.error(t('errorCreateSwap'))
+    onError: (error) => {
+      toast.error(t('errorCreateSwap'), { description: error.message })
     }
   })
 }

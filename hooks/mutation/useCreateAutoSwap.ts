@@ -9,15 +9,15 @@ function useCreateAutoSwap(adminkey: string) {
   const router = useRouter()
 
   return useMutation({
-    mutationKey: ['createSwap'],
+    mutationKey: ['createAutoSwap'],
     mutationFn: (data: CreateAutoSwapData) =>
       lnbits.createAutoSwap(data, adminkey),
     onSuccess: () => {
       toast.success(t('createdAutoSwap'))
       router.navigate('/swaps')
     },
-    onError: () => {
-      toast.error(t('errorCreateAutoSwap'))
+    onError: (error) => {
+      toast.error(t('errorCreateAutoSwap'), { description: error.message })
     }
   })
 }

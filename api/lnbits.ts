@@ -26,6 +26,7 @@ import {
   WalletSchema,
   WebsocketSchema
 } from '@/schemas/lnbits'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import type { FiatSnapshot } from '@/types/fiat'
 import type { Payment } from '@/types/lnbits'
@@ -36,12 +37,23 @@ import { tryCatch } from '@/utils/tryCatch'
 
 import medusa from './medusa'
 
-export const BASE_URL = 'https://wallet.medusa.bz'
-
 const headers = { 'Content-Type': 'application/json' }
 
 function getCurrentBaseUrl() {
   return useSettingsStore.getState().lnbitsUrl
+}
+
+// User-level endpoints (wallet create/delete, auth) require the access token
+// since LNbits v1. Older versions accept the admin key instead, so we send both.
+function authHeaders(
+  accessToken = useAuthStore.getState().accessToken
+): Record<string, string> {
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+}
+
+// Price API expects unix seconds
+function toUnixSeconds(date: string) {
+  return Math.floor(new Date(date).getTime() / 1000)
 }
 
 async function register(username: string, email: string, password: string) {
@@ -173,12 +185,18 @@ async function getPaylinks(inkey: string) {
     )
   }
 
-  return [...data.map((paylink) => parse.fromLnbitsPaylinkToPaylink(paylink))]
+  return data
+    .filter((paylink) => !!paylink.username)
+    .map((paylink) => parse.fromLnbitsPaylinkToPaylink(paylink))
 }
 
 async function getUser(accessToken: string) {
   const response = await fetch(`${getCurrentBaseUrl()}/api/v1/auth`, {
-    headers: { ...headers, Cookie: `cookie_access_token=${accessToken}` },
+    headers: {
+      ...headers,
+      ...authHeaders(accessToken),
+      Cookie: `cookie_access_token=${accessToken}`
+    },
     method: 'GET'
   })
   const json = await response.json()
@@ -276,7 +294,7 @@ async function getPayments(inkey: string) {
   const historicalPricesMap = getHistoricalPricesMap(
     data.map((payment) => ({
       id: payment.payment_hash,
-      timestamp: new Date(payment.time).getTime()
+      timestamp: toUnixSeconds(payment.time)
     }))
   )
 
@@ -358,7 +376,7 @@ async function getPaginatedPayments(
   const historicalPricesMap = getHistoricalPricesMap(
     data.map((payment) => ({
       id: payment.payment_hash,
-      timestamp: new Date(payment.time).getTime()
+      timestamp: toUnixSeconds(payment.time)
     }))
   )
 
@@ -449,6 +467,7 @@ async function createWallet(name: string, adminkey: string) {
     const response = await fetch(`${getCurrentBaseUrl()}/api/v1/wallet`, {
       headers: {
         ...headers,
+        ...authHeaders(),
         'x-api-key': adminkey
       },
       method: 'POST',
@@ -482,14 +501,15 @@ async function updateWalletName(name: string, adminkey: string) {
 }
 
 async function deleteWallet(walletId: string, adminkey: string) {
-  try {
-    await fetch(`${getCurrentBaseUrl()}/api/v1/wallet/${walletId}`, {
-      headers: { ...headers, 'x-api-key': adminkey },
+  const response = await fetch(
+    `${getCurrentBaseUrl()}/api/v1/wallet/${walletId}`,
+    {
+      headers: { ...headers, ...authHeaders(), 'x-api-key': adminkey },
       method: 'DELETE'
-    })
-  } catch (_error) {
-    //
-  }
+    }
+  )
+
+  if (!response.ok) throw new Error('Unable to delete wallet')
 }
 
 async function createInvoice(amount: number, inkey: string, memo?: string) {
@@ -516,6 +536,8 @@ type PayBolt11 = {
 
 type PayLnurl = {
   type: 'lnurl'
+  /** Lightning address or bech32 LNURL being paid */
+  lnurl: string
   callback: string
   amount: number // in sats
   comment?: string
@@ -569,7 +591,9 @@ async function payLnurl(payload: Omit<PayLnurl, 'type'>, adminkey: string) {
       'x-api-key': adminkey
     },
     method: 'POST',
+    // `lnurl` is used by LNbits >= 1.3, the remaining fields by older versions
     body: JSON.stringify({
+      lnurl: payload.lnurl,
       description_hash: payload.descriptionHash,
       description: payload.description,
       callback: payload.callback,

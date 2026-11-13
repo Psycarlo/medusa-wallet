@@ -1,7 +1,7 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Keyboard, type TextInputInstance } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
@@ -10,20 +10,18 @@ import lnbits from '@/api/lnbits'
 import Close from '@/components/icons/Close'
 import Pencil from '@/components/icons/Pencil'
 import MAddressCopy from '@/components/MAddressCopy'
-import MAmountDisplay, {
-  type MAmountDisplayType
-} from '@/components/MAmountDisplay'
+import MAmountDisplay from '@/components/MAmountDisplay'
 import MBottomSheet from '@/components/MBottomSheet'
 import MButton from '@/components/MButton'
 import MEmptyInputButton from '@/components/MEmptyInputButton'
 import MIconButton from '@/components/MIconButton'
-import MNumPad, { type Keys } from '@/components/MNumPad'
+import MNumPad from '@/components/MNumPad'
 import MQRCode from '@/components/MQRCode'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import MTimer from '@/components/MTimer'
 import { EXPIRATION_TIME } from '@/config/medusa'
-import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
+import useAmountInput from '@/hooks/useAmountInput'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
@@ -73,74 +71,23 @@ export default function Receive() {
   const [amount, setAmount] = useState(0)
   const [comment, setComment] = useState('')
 
-  const [localAmount, setLocalAmount] = useState('0')
-  const [localFiat, setLocalFiat] = useState('0')
   const [localComment, setLocalComment] = useState('')
 
   const sheetCommentRef = useRef<TextInputInstance>(null)
   const bottomSheetAmountRef = useRef<BottomSheet>(null)
   const bottomSheetCommentRef = useRef<BottomSheet>(null)
+  const paymentWsRef = useRef<WebSocket | null>(null)
 
-  const [amountType, setAmountType] = useState<MAmountDisplayType>('btc')
+  const amountInput = useAmountInput(rate, bitcoinUnit)
+
+  // Stop listening for invoice payments when leaving the screen
+  useEffect(() => () => paymentWsRef.current?.close(), [])
 
   function handleBottomSheetNoteOpen() {
     bottomSheetCommentRef.current?.expand()
     sheetCommentRef.current?.focus()
   }
 
-  function syncSatsWithFiat(fiat: string) {
-    const amountInSats = Math.ceil(Number(fiat) * rate)
-    setLocalAmount(String(amountInSats))
-  }
-
-  function syncFiatWithSats(sats: string) {
-    const amountInFiat = Number(sats) / rate
-    setLocalFiat(amountInFiat.toFixed(2))
-  }
-
-  function handleOnKeyPress(key: Keys) {
-    if (amountType === 'btc') {
-      if (key === 'DEL') {
-        const newValue = localAmount.length > 1 ? localAmount.slice(0, -1) : '0'
-        syncFiatWithSats(newValue)
-        setLocalAmount(newValue)
-      } else if (key === ',') {
-        if (!localAmount.includes('.')) {
-          setLocalAmount((prev) => (prev === '0' ? '0.' : prev + '.'))
-        }
-      } else if (typeof key === 'number') {
-        setLocalAmount((prev) => {
-          const newValue = prev === '0' ? key.toString() : prev + key.toString()
-          syncFiatWithSats(newValue)
-          return newValue
-        })
-      }
-    } else if (amountType === 'fiat') {
-      if (key === 'DEL') {
-        const newValue = localFiat.length > 1 ? localFiat.slice(0, -1) : '0'
-        syncSatsWithFiat(newValue)
-        setLocalFiat(newValue)
-      } else if (key === ',') {
-        if (!localFiat.includes('.')) {
-          setLocalFiat((prev) => (prev === '0' ? '0.' : prev + '.'))
-        }
-      } else if (typeof key === 'number') {
-        setLocalFiat((prev) => {
-          const decimalParts = prev.split('.')
-          const hasDecimal = decimalParts.length > 1
-          const decimalPlaces = hasDecimal ? decimalParts[1].length : 0
-
-          if (hasDecimal && decimalPlaces >= 2) return prev
-
-          const newValue = prev === '0' ? key.toString() : prev + key.toString()
-          syncSatsWithFiat(newValue)
-          return newValue
-        })
-      }
-    }
-  }
-
-  // TODO: Refactor into custom hook
   const createInvoiceMutation = useMutation({
     mutationKey: ['createInvoice'],
     mutationFn: ({
@@ -152,33 +99,36 @@ export default function Receive() {
       inkey: string
       memo?: string
     }) => lnbits.createInvoice(amount, inkey, memo),
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
       if (!response) return
       setQrCodeValue(response.bolt11)
       setAddressCopyType('invoice')
-      lnbits.subscribePaymentWs(response.payment_hash, () => {
-        toast.success(`${amount > 0 ? '+' : ''}${formatNumber(amount)} sats!`)
-        queryClient.invalidateQueries({ queryKey: ['user'] })
-        queryClient.invalidateQueries({ queryKey: ['payments'] })
-        queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })
-      })
+      paymentWsRef.current?.close()
+      paymentWsRef.current = lnbits.subscribePaymentWs(
+        response.payment_hash,
+        () => {
+          toast.success(`+${formatNumber(variables.amount)} sats!`)
+          queryClient.invalidateQueries({ queryKey: ['user'] })
+          queryClient.invalidateQueries({ queryKey: ['payments'] })
+        }
+      )
     }
   })
 
   function handleConfirmAmount() {
-    const satsAmount = Number(localAmount)
+    const satsAmount = amountInput.sats
     const memo = comment ? comment : undefined
-    if (satsAmount && satsAmount > 0) {
+    if (currentWallet && satsAmount > 0) {
       setAmount(satsAmount)
       createInvoiceMutation.mutate({
         amount: satsAmount,
-        inkey: currentWallet!.inkey,
+        inkey: currentWallet.inkey,
         memo
       })
     } else {
       setAmount(0)
-      setLocalAmount('0')
-      resetToLightningAddress()
+      amountInput.reset()
+      resetQrCode()
     }
     bottomSheetAmountRef.current?.close()
   }
@@ -189,10 +139,10 @@ export default function Receive() {
     bottomSheetCommentRef.current?.close()
     if (!amount)
       toast.info(t('addAmountToLightningInvoice'), { duration: 3000 })
-    else {
+    else if (currentWallet) {
       createInvoiceMutation.mutate({
-        amount: amount,
-        inkey: currentWallet!.inkey,
+        amount,
+        inkey: currentWallet.inkey,
         memo: newComment ? newComment : undefined
       })
     }
@@ -200,8 +150,8 @@ export default function Receive() {
 
   function handleClearAmount() {
     setAmount(0)
-    setLocalAmount('0')
-    resetToLightningAddress()
+    amountInput.reset()
+    resetQrCode()
     if (comment)
       toast.info(t('addAmountToLightningInvoice'), { duration: 3000 })
     bottomSheetAmountRef.current?.close()
@@ -210,13 +160,20 @@ export default function Receive() {
   function handleClearComment() {
     setComment('')
     setLocalComment('')
-    if (!amount) resetToLightningAddress()
+    if (!amount) resetQrCode()
     bottomSheetCommentRef.current?.close()
   }
 
-  function resetToLightningAddress() {
-    setQrCodeValue(paylink!.lnurl)
-    setAddressCopyType('address')
+  // Only the default wallet owns the paylink; other wallets need an invoice
+  function resetQrCode() {
+    paymentWsRef.current?.close()
+    if (defaultWallet && paylink) {
+      setQrCodeValue(paylink.lnurl)
+      setAddressCopyType('address')
+    } else {
+      setQrCodeValue('')
+      setAddressCopyType('invoice')
+    }
   }
 
   if (!currentWallet || !paylink) return <Redirect href="/" />
@@ -320,19 +277,19 @@ export default function Receive() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item>
             <MAmountDisplay
-              type={amountType}
-              sats={
-                Number(localAmount) *
-                (bitcoinUnit === 'btc' ? SATOSHIS_IN_BITCOIN : 1)
-              }
-              fiat={Number(localFiat)}
+              type={amountInput.amountType}
+              sats={amountInput.sats}
+              fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}
-              onChangeType={(type) => setAmountType(type)}
+              onChangeType={amountInput.setAmountType}
             />
           </MFormLayout.Item>
           <MFormLayout.Item>
-            <MNumPad type={bitcoinUnit} onKeyPress={handleOnKeyPress} />
+            <MNumPad
+              type={amountInput.numPadType}
+              onKeyPress={amountInput.handleKeyPress}
+            />
           </MFormLayout.Item>
           <MFormLayout.Item>
             <MButton
@@ -359,6 +316,7 @@ export default function Receive() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item>
             <MTextInput
+              inBottomSheet
               ref={sheetCommentRef}
               value={localComment}
               placeholder={t('commentDescription')}

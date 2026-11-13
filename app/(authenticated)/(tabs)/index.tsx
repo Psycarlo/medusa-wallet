@@ -148,7 +148,6 @@ export default function Lightning() {
             )
             queryClient.invalidateQueries({ queryKey: ['user'] })
             queryClient.invalidateQueries({ queryKey: ['payments'] })
-            queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })
           })
           wsSubscriptions.current.set(wallet.inkey, ws)
         }

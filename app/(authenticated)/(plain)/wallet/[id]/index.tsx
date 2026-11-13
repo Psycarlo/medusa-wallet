@@ -1,6 +1,7 @@
 import { FlashList } from '@shopify/flash-list'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
 
 import Ellipsis from '@/components/icons/Ellipsis'
@@ -25,6 +26,7 @@ import { formatNumber } from '@/utils/format'
 
 export default function Wallet() {
   const router = useRouter()
+  const { bottom: bottomInset } = useSafeAreaInsets()
   const { id } = useLocalSearchParams<WalletSearchParams>()
 
   const [wallet, walletColors, updateWalletColor] = useWalletsStore(
@@ -41,8 +43,8 @@ export default function Wallet() {
 
   // Update color on wallets created in lnbits dashboard
   useEffect(() => {
-    if (!walletColors[wallet!.id])
-      updateWalletColor(wallet!.id, WALLET_CARD_COLORS[0])
+    if (wallet && !walletColors[wallet.id])
+      updateWalletColor(wallet.id, WALLET_CARD_COLORS[0])
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!wallet) return <Redirect href="/" />
@@ -139,6 +141,7 @@ export default function Wallet() {
           </MText>
           <FlashList
             data={wallet.transactions}
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <MTransactionCard
