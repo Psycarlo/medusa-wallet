@@ -47,13 +47,16 @@ export default function WalletSettings() {
     ])
   )
 
-  const [newWalletName, setNewWalletName] = useState(wallet?.name || '')
-  const [walletColorId, setWalletColorId] = useState(
+  const savedColorId =
     (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
-  )
-  const [hasChanges, setHasChanges] = useState(false)
-  const [hasNameChanged, setHasNameChanged] = useState(false)
-  const [hasColorChanged, setHasColorChanged] = useState(false)
+
+  const [newWalletName, setNewWalletName] = useState(wallet?.name || '')
+  const [walletColorId, setWalletColorId] = useState(savedColorId)
+
+  // Derived from the form, so they can't disagree with what is on screen
+  const hasNameChanged = newWalletName !== wallet?.name
+  const hasColorChanged = walletColorId !== savedColorId
+  const hasChanges = hasNameChanged || hasColorChanged
 
   const isDefaultWallet = useMemo(
     () => getIsDefaultWallet(id, wallets),
@@ -79,20 +82,6 @@ export default function WalletSettings() {
       toast.error(t('errorDeletingWallet'))
     }
   })
-
-  function handleOnChangeNewWalletNameText(text: string) {
-    setNewWalletName(text)
-    setHasChanges(text !== wallet?.name)
-    setHasNameChanged(text !== wallet?.name)
-  }
-
-  function handleOnChangeNewWalletColorId(id: string) {
-    setWalletColorId(id)
-    const currentColorId =
-      (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
-    setHasChanges(id !== currentColorId)
-    setHasColorChanged(id !== currentColorId)
-  }
 
   function handleUpdateWallet() {
     if (hasNameChanged) updateWalletNameMutation.mutate()
@@ -138,7 +127,7 @@ export default function WalletSettings() {
             <MTextInput
               value={newWalletName}
               placeholder={t('enterWalletName')}
-              onChangeText={(text) => handleOnChangeNewWalletNameText(text)}
+              onChangeText={setNewWalletName}
             />
           </MFormLayout.Item>
           <MFormLayout.Item>
@@ -146,7 +135,7 @@ export default function WalletSettings() {
             <MColorSelector
               colors={WALLET_CARD_COLORS}
               selected={walletColorId}
-              onSelect={(id) => handleOnChangeNewWalletColorId(id)}
+              onSelect={setWalletColorId}
             />
           </MFormLayout.Item>
         </MFormLayout>
