@@ -88,39 +88,46 @@ export default function Receive() {
     sheetCommentRef.current?.focus()
   }
 
+  type CreateInvoiceVariables = {
+    amount: number
+    inkey: string
+    memo?: string
+  }
+
   const createInvoiceMutation = useMutation({
     mutationKey: ['createInvoice'],
-    mutationFn: ({
-      amount,
-      inkey,
-      memo
-    }: {
-      amount: number
-      inkey: string
-      memo?: string
-    }) => lnbits.createInvoice(amount, inkey, memo),
-    onSuccess: (response, variables) => {
-      if (!response) return
-      setQrCodeValue(response.bolt11)
-      setAddressCopyType('invoice')
-      paymentWsRef.current?.close()
-      paymentWsRef.current = lnbits.subscribePaymentWs(
-        response.payment_hash,
-        () => {
-          toast.success(`+${formatNumber(variables.amount)} sats!`)
-          queryClient.invalidateQueries({ queryKey: ['user'] })
-          queryClient.invalidateQueries({ queryKey: ['payments'] })
-        }
-      )
-    }
+    mutationFn: ({ amount, inkey, memo }: CreateInvoiceVariables) =>
+      lnbits.createInvoice(amount, inkey, memo)
   })
+
+  // Callbacks passed to `mutate` only run for the latest request and not
+  // after the screen unmounts, so an outdated invoice never replaces a newer
+  // one and no websocket is opened after leaving
+  function createInvoice(variables: CreateInvoiceVariables) {
+    createInvoiceMutation.mutate(variables, {
+      onSuccess: (response) => {
+        if (!response) return
+        setQrCodeValue(response.bolt11)
+        setAddressCopyType('invoice')
+        paymentWsRef.current?.close()
+        paymentWsRef.current = lnbits.subscribePaymentWs(
+          response.payment_hash,
+          () => {
+            toast.success(`+${formatNumber(variables.amount)} sats!`)
+            queryClient.invalidateQueries({ queryKey: ['user'] })
+            queryClient.invalidateQueries({ queryKey: ['payments'] })
+          }
+        )
+      }
+    })
+  }
 
   function handleConfirmAmount() {
     const satsAmount = amountInput.sats
     const memo = comment ? comment : undefined
     if (currentWallet && satsAmount > 0) {
       setAmount(satsAmount)
-      createInvoiceMutation.mutate({
+      createInvoice({
         amount: satsAmount,
         inkey: currentWallet.inkey,
         memo
@@ -140,7 +147,7 @@ export default function Receive() {
     if (!amount)
       toast.info(t('addAmountToLightningInvoice'), { duration: 3000 })
     else if (currentWallet) {
-      createInvoiceMutation.mutate({
+      createInvoice({
         amount,
         inkey: currentWallet.inkey,
         memo: newComment ? newComment : undefined
@@ -279,6 +286,7 @@ export default function Receive() {
             <MAmountDisplay
               type={amountInput.amountType}
               sats={amountInput.sats}
+              amountText={amountInput.amountText}
               fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}

@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 import {
   AuthSchema,
-  ConversionSchema,
   PaylinkSchema,
   PaymentSchema,
   RateSchema,
@@ -19,8 +18,6 @@ export type Wallet = z.infer<typeof WalletSchema>
 export type User = z.infer<typeof UserSchema>
 
 export type Payment = z.infer<typeof PaymentSchema>
-
-export type Conversion = z.infer<typeof ConversionSchema>
 
 export type Rate = z.infer<typeof RateSchema>
 

@@ -10,6 +10,8 @@ function useCreateAutoSwap(adminkey: string) {
 
   return useMutation({
     mutationKey: ['createAutoSwap'],
+    // Never queue a payment while offline to run it later
+    networkMode: 'always',
     mutationFn: (data: CreateAutoSwapData) =>
       lnbits.createAutoSwap(data, adminkey),
     onSuccess: () => {

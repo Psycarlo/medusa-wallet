@@ -64,6 +64,7 @@ export default function Auto() {
   const [address, setAddress] = useState('')
 
   const disabled =
+    !boltzConfig ||
     boltzUnavailable ||
     amountOutOfLimits ||
     !selectedWallet ||
@@ -217,6 +218,7 @@ export default function Auto() {
             <MAmountDisplay
               type={amountInput.amountType}
               sats={amountInput.sats}
+              amountText={amountInput.amountText}
               fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}

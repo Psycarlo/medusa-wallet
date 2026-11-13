@@ -24,12 +24,18 @@ function useClipboardInvoice() {
 
     checkClipboard()
 
+    // Android only exposes the clipboard once the window regains focus,
+    // which happens shortly after the app becomes active
+    let timeout: ReturnType<typeof setTimeout> | undefined
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') checkClipboard()
+      if (state !== 'active') return
+      clearTimeout(timeout)
+      timeout = setTimeout(checkClipboard, 300)
     })
 
     return () => {
       active = false
+      clearTimeout(timeout)
       subscription.remove()
     }
   }, [])

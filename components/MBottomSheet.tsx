@@ -1,6 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { type BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types'
 import { type ForwardedRef, forwardRef } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import MHStack from '@/layouts/MHStack'
 import MVStack from '@/layouts/MVStack'
@@ -23,6 +24,8 @@ function MBottomSheet(
   { title, snapPoints = ['50%'], onClose, children }: MBottomSheetProps,
   ref: ForwardedRef<BottomSheetMethods>
 ) {
+  const { bottom: bottomInset } = useSafeAreaInsets()
+
   return (
     <BottomSheet
       ref={ref}
@@ -37,6 +40,7 @@ function MBottomSheet(
     >
       <BottomSheetScrollView
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
         style={{
           flex: 1,
           paddingTop: 16,

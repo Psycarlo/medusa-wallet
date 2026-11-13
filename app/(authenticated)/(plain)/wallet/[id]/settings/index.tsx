@@ -75,8 +75,8 @@ export default function WalletSettings() {
       router.navigate('/')
       if (wallet) deleteWallet(wallet)
     },
-    onError: (error) => {
-      toast.error(t('errorDeletingWallet'), { description: error.message })
+    onError: () => {
+      toast.error(t('errorDeletingWallet'))
     }
   })
 
@@ -121,7 +121,7 @@ export default function WalletSettings() {
   if (!wallet) return <Redirect href="/" />
 
   return (
-    <MMainLayout withPaddingBottom>
+    <MMainLayout withPaddingBottom avoidKeyboard>
       <Stack.Screen
         options={{
           headerTitle: () => (

@@ -73,7 +73,7 @@
   "dontHaveAnAccount": "Don't have an account?",
   "email": "Email",
   "enableCameraAccess": "Enable camera access",
-  "enableCameraText": "Enable camera access in your phone's settings to scan, or paste and address or request from your clipboard.",
+  "enableCameraText": "Enable camera access in your phone's settings to scan, or paste an address or invoice from your clipboard.",
   "enterAPassword": "Enter a password",
   "enterAUsername": "Enter a username",
   "enterAnEmail": "Enter an email",
@@ -106,7 +106,6 @@
   "introDescription2": "and swap between Lightning and on-chain.",
   "introTitle1": "Your Lightning Wallet",
   "introTitle2": "With Zero KYC",
-  "invalidOtherEmail": "Invalid other email",
   "invoiceWillShowHere": "Invoice will show here",
   "language": "Language",
   "languages": {

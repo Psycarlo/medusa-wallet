@@ -11,6 +11,8 @@ function usePay(adminkey: string) {
 
   return useMutation({
     mutationKey: ['pay'],
+    // Never queue a payment while offline to run it later
+    networkMode: 'always',
     mutationFn: (invoice: PayData) => lnbits.pay(invoice, adminkey),
     onSuccess: () => {
       toast.success(t('successPayment'))

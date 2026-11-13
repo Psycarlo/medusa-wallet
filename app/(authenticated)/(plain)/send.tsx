@@ -1,6 +1,5 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
 import { useQuery } from '@tanstack/react-query'
-import { CryptoDigestAlgorithm, digestStringAsync } from 'expo-crypto'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { TouchableHighlight } from 'react-native'
@@ -43,11 +42,9 @@ type SendRequest =
     }
   | {
       type: 'lnurl'
-      lnurl: string
       callback: string
       recipient: string
       description: string
-      descriptionHash: string
       /** Sendable range in sats */
       min: number
       max: number
@@ -79,14 +76,9 @@ async function decodeSendRequest(invoice: string): Promise<SendRequest> {
 
   return {
     type: 'lnurl',
-    lnurl: normalizeInvoice(invoice),
     callback: callback || '',
     recipient: identifier || '?',
     description: description || '',
-    descriptionHash: await digestStringAsync(
-      CryptoDigestAlgorithm.SHA256,
-      description || ''
-    ),
     min: Math.ceil((minSendable || 0) / 1000),
     max: Math.floor((maxSendable || 0) / 1000),
     maxComment: commentAllowed || 0
@@ -115,7 +107,11 @@ export default function Send() {
     queryFn: () => decodeSendRequest(invoice),
     enabled: !!invoice,
     retry: false,
-    gcTime: 0
+    gcTime: 0,
+    // Decode once: refetching could fail and kick the user out mid-send
+    staleTime: Infinity,
+    refetchOnReconnect: false,
+    networkMode: 'always'
   })
 
   const [lnurlAmount, setLnurlAmount] = useState<number>()
@@ -159,12 +155,9 @@ export default function Send() {
         ? { type: 'bolt11', invoice: request.invoice }
         : {
             type: 'lnurl',
-            lnurl: request.lnurl,
             callback: request.callback,
             amount,
-            comment,
-            descriptionHash: request.descriptionHash,
-            description: request.description
+            comment
           }
     )
   }
@@ -288,7 +281,7 @@ export default function Send() {
                   </MHStack>
                   {isLnurl && (
                     <MText
-                      size="xs"
+                      size="sm"
                       color={outOfRange ? 'danger' : 'muted'}
                       style={{ textAlign: 'right' }}
                     >
@@ -359,6 +352,7 @@ export default function Send() {
             <MAmountDisplay
               type={amountInput.amountType}
               sats={amountInput.sats}
+              amountText={amountInput.amountText}
               fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}

@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking'
 import { Stack, useRouter } from 'expo-router'
 import { useRef } from 'react'
 import { ScrollView } from 'react-native-gesture-handler'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
 
 import ArrowLeftRight from '@/components/icons/ArrowLeftRight'
@@ -44,6 +45,7 @@ import { getPaylinkAddress } from '@/utils/medusa'
 
 export default function Settings() {
   const router = useRouter()
+  const { bottom: bottomInset } = useSafeAreaInsets()
   const [username, email] = useAuthStore(
     useShallow((state) => [state.username, state.email])
   )
@@ -129,7 +131,7 @@ export default function Settings() {
 
   return (
     <>
-      <MMainLayout withPaddingBottom>
+      <MMainLayout>
         <Stack.Screen
           options={{
             headerTitle: () => (
@@ -139,7 +141,7 @@ export default function Settings() {
             )
           }}
         />
-        <ScrollView>
+        <ScrollView contentContainerStyle={{ paddingBottom: 32 + bottomInset }}>
           <MVStack gap="md">
             <MSettingsCard title={t('account')}>
               <MSettingsCard.Item>

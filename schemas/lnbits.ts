@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import { SUPPORTED_FIAT_CURRENCIES } from '@/config/fiat'
-
 export const ValidationErrorSchema = z.object({
   detail: z.union([
     z.array(
@@ -70,17 +68,6 @@ export const PaymentSchema = z.object({
   webhook_status: z.number().optional().nullable()
 })
 
-export const ConversionSchema = z
-  .object({
-    BTC: z.number(),
-    sats: z.number()
-  })
-  .and(
-    z
-      .partialRecord(z.enum(SUPPORTED_FIAT_CURRENCIES), z.number())
-      .refine((data) => Object.keys(data).length === 1)
-  )
-
 export const RateSchema = z.object({
   rate: z.number()
 })
@@ -110,6 +97,12 @@ export const InkeyWebsocketSchema = z.object({
 export const PayInvoiceSchema = z.object({
   checking_id: z.string(),
   payment_hash: z.string()
+})
+
+export const LnurlPayCallbackSchema = z.object({
+  pr: z.string().optional(),
+  status: z.string().optional(),
+  reason: z.string().optional()
 })
 
 export const LnurlSchema = z.object({

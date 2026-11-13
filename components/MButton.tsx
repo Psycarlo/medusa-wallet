@@ -64,7 +64,8 @@ function MButton({
       underlayColor={underlayColor}
       style={buttonStyles}
       activeOpacity={loading ? 0 : 1}
-      disabled={disabled}
+      // Also ignore presses while loading to avoid duplicate submissions
+      disabled={disabled || loading}
       {...props}
     >
       <View style={{ alignItems: 'center' }}>

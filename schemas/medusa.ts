@@ -7,7 +7,8 @@ import {
 
 export const TimestampPriceSchema = z.object({
   unix_time: z.number(),
-  bitcoin: z.strictObject(
+  // Unknown currencies are ignored so new ones don't break parsing
+  bitcoin: z.object(
     SUPPORTED_FIAT_CURRENCIES.reduce(
       (acc, currency) => {
         acc[currency] = z.number()

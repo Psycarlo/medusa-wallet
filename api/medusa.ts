@@ -21,6 +21,8 @@ async function getBitcoinPricesAt(timestamp: number) {
       method: 'GET'
     }
   )
+  if (!response.ok) throw new Error('Unable to get bitcoin prices')
+
   const json = await response.json()
 
   const data = TimestampPriceSchema.parse(json)

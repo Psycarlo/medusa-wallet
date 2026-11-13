@@ -69,6 +69,7 @@ export default function Bridge() {
   const [address, setAddress] = useState('')
 
   const disabled =
+    !boltzConfig ||
     boltzUnavailable ||
     amountOutOfLimits ||
     !selectedWallet ||
@@ -264,6 +265,7 @@ export default function Bridge() {
             <MAmountDisplay
               type={amountInput.amountType}
               sats={amountInput.sats}
+              amountText={amountInput.amountText}
               fiat={amountInput.fiat}
               fiatCurrency={fiatCurrency}
               rate={rate}

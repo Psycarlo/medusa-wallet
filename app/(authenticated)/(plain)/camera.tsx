@@ -54,10 +54,14 @@ export default function Camera() {
   }
 
   async function handleOnPaste() {
+    if (scanLocked.current) return
+    scanLocked.current = true
+
     const invoice = await readInvoice()
 
     if (!invoice) {
-      toast.error(t('errorNoInvoiceInClipboard'))
+      scanLocked.current = false
+      toast.error(t('errorNoInvoiceInClipboard'), { duration: 3000 })
       return
     }
 
