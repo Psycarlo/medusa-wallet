@@ -33,4 +33,8 @@ export type TransactionSearchParams = WalletSearchParams & {
 
 export type NewPinParams = { backIcon?: 'true' }
 
-export type ValidatePinParams = { type?: 'disable-pin' | 'enable-biometric' }
+/** What the PIN is being asked for (see the `validatePin` screen) */
+export type ValidatePinPurpose =
+  'disable-pin' | 'enable-biometric' | 'change-pin'
+
+export type ValidatePinParams = { type?: ValidatePinPurpose }

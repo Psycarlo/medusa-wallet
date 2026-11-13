@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner-native'
 
 import { t } from '@/locales'
+import { isSignedIn } from '@/machines/session'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 
@@ -29,7 +30,7 @@ function useTrySetLnbitsUrl() {
           throw new Error('Unable to connect to the lnbits server')
 
         setLnbitsUrl(newLnbitsUrl)
-        if (!useAuthStore.getState().loggedOut) await logout()
+        if (isSignedIn(useAuthStore.getState().status)) await logout()
         toast.success(t('lnbitsUrlChangeSuccess'))
       } catch {
         toast.error(t('lnbitsUrlChangeError'))

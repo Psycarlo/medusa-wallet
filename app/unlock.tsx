@@ -1,47 +1,43 @@
-import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import * as LocalAuthentication from 'expo-local-authentication'
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { BackHandler } from 'react-native'
 import Animated from 'react-native-reanimated'
-import { useShallow } from 'zustand/react/shallow'
 
 import type { Keys } from '@/components/MNumPad'
 import MNumPad from '@/components/MNumPad'
 import MPinInput from '@/components/MPinInput'
 import MText from '@/components/MText'
-import { PIN_SIZE } from '@/config/auth'
-import { useAnimatedShake } from '@/hooks/useAnimatedShake'
-import useLogout from '@/hooks/useLogout'
+import usePinEntry from '@/hooks/usePinEntry'
+import useVerifyPin, { formatAttemptsRemaining } from '@/hooks/useVerifyPin'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import { isBiometricEnabled } from '@/machines/appLock'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 
 export default function Unlock() {
   const router = useRouter()
-  const [
-    pinRetries,
-    validatePin,
-    decrementPinRetries,
-    resetPinRetries,
-    setAuthTriggered
-  ] = useAuthStore(
-    useShallow((state) => [
-      state.pinRetries,
-      state.validatePin,
-      state.decrementPinRetries,
-      state.resetPinRetries,
-      state.setAuthTriggered
-    ])
+  const unlockSession = useAuthStore((state) => state.unlock)
+  const biometricEnabled = useSettingsStore((state) =>
+    isBiometricEnabled(state.appLock)
   )
-  const biometricEnabled = useSettingsStore((state) => state.biometricEnabled)
-  const logout = useLogout()
-  const { shake, shakeStyle } = useAnimatedShake()
+  const { verifyPin, pinRetries } = useVerifyPin()
 
-  const [pin, setPin] = useState('')
-  const [failedOnce, setFailedOnce] = useState(false)
+  function unlock() {
+    unlockSession()
+    router.replace('/')
+  }
+
+  const pinEntry = usePinEntry(async (pin) => {
+    const result = await verifyPin(pin)
+    if (result === 'lockedOut') return
+    if (result === 'invalid') return false
+
+    unlock()
+    return true
+  })
 
   // The app is locked: don't let the back button skip authentication
   useEffect(() => {
@@ -53,9 +49,8 @@ export default function Unlock() {
   }, [])
 
   function handleOnKeyPress(key: Keys) {
-    if (key === 'DEL') setPin((prev) => prev.slice(0, -1))
-    else if (typeof key === 'number') setPin((prev) => `${prev}${key}`)
-    else if (key === 'BIOMETRIC') handleBiometric()
+    if (key === 'BIOMETRIC') handleBiometric()
+    else pinEntry.handleKey(key)
   }
 
   async function handleBiometric() {
@@ -64,35 +59,6 @@ export default function Unlock() {
     })
     if (success) unlock()
   }
-
-  function unlock() {
-    setFailedOnce(false)
-    resetPinRetries()
-    setAuthTriggered(false)
-    router.replace('/')
-  }
-
-  useEffect(() => {
-    async function handleValidatePin() {
-      if (pin.length !== PIN_SIZE) return
-
-      const isValid = await validatePin(pin)
-
-      if (!isValid) {
-        if (pinRetries === 1) return await logout()
-        setFailedOnce(true)
-        decrementPinRetries()
-        setPin('')
-        shake()
-        await notificationAsync(NotificationFeedbackType.Error)
-        return
-      }
-
-      unlock()
-    }
-
-    handleValidatePin()
-  }, [pin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <MMainLayout withPaddingTop withPaddingBottom>
@@ -109,14 +75,10 @@ export default function Unlock() {
             {t('enterYourPin')}
           </MText>
           <MText color="muted" center>
-            {failedOnce
-              ? pinRetries === 1
-                ? `1 ${t('attemptRemaining').toLowerCase()}`
-                : `${pinRetries} ${t('attemptsRemaining').toLowerCase()}`
-              : ''}
+            {pinEntry.rejections > 0 ? formatAttemptsRemaining(pinRetries) : ''}
           </MText>
-          <Animated.View style={shakeStyle}>
-            <MPinInput filledCharacter={pin.length} />
+          <Animated.View style={pinEntry.shakeStyle}>
+            <MPinInput filledCharacter={pinEntry.digitCount} />
           </Animated.View>
         </MVStack>
         <MNumPad

@@ -1,7 +1,6 @@
 import { Redirect, useRouter } from 'expo-router'
 import { Tabs } from 'expo-router/js-tabs'
 import { View } from 'react-native'
-import { useShallow } from 'zustand/react/shallow'
 
 import Bridge from '@/components/icons/Bridge'
 import Scan from '@/components/icons/Scan'
@@ -9,18 +8,17 @@ import Settings from '@/components/icons/Settings'
 import Zap from '@/components/icons/Zap'
 import MIconButton from '@/components/MIconButton'
 import { t } from '@/locales'
+import { isSignedIn } from '@/machines/session'
 import { useAuthStore } from '@/store/auth'
 import { Colors } from '@/styles'
 import { mainLayoutPaddingHorizontal } from '@/styles/layout'
 
 export default function TabsLayout() {
   const router = useRouter()
-  const [firstTime, loggedOut] = useAuthStore(
-    useShallow((state) => [state.firstTime, state.loggedOut])
-  )
+  const status = useAuthStore((state) => state.status)
 
-  if (firstTime) return <Redirect href="/intro" />
-  if (loggedOut) return <Redirect href="/signin" />
+  if (status === 'onboarding') return <Redirect href="/intro" />
+  if (!isSignedIn(status)) return <Redirect href="/signin" />
 
   return (
     <View style={{ flex: 1 }}>

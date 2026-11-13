@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner-native'
-import { useShallow } from 'zustand/react/shallow'
 
 import lnbits from '@/api/lnbits'
 import MButton from '@/components/MButton'
@@ -20,21 +19,7 @@ import { useAuthStore } from '@/store/auth'
 
 export default function Signup() {
   const router = useRouter()
-  const [
-    setFirstTime,
-    setLoggedOut,
-    setUsernameStore,
-    setEmailStore,
-    setAccessToken
-  ] = useAuthStore(
-    useShallow((state) => [
-      state.setFirstTime,
-      state.setLoggedOut,
-      state.setUsername,
-      state.setEmail,
-      state.setAccessToken
-    ])
-  )
+  const signIn = useAuthStore((state) => state.signIn)
 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -49,11 +34,7 @@ export default function Signup() {
     mutationFn: () => lnbits.register(username, email, password),
     onSuccess: (accessToken) => {
       if (!accessToken) return
-      setUsernameStore(username)
-      setEmailStore(email)
-      setAccessToken(accessToken)
-      setFirstTime(false)
-      setLoggedOut(false)
+      signIn({ accessToken, username, email })
       router.replace('/')
     },
     onError: (error) => {
