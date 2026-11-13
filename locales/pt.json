@@ -133,6 +133,7 @@
   "noNote": "Sem nota",
   "noSwaps": "Sem swaps",
   "noTransactions": "Sem transações",
+  "noTransactionsYet": "Ainda sem transações",
   "noUsername": "Sem nome de utilizador",
   "normalSwaps": "Swaps normais",
   "note": "Nota",
@@ -195,6 +196,17 @@
   "successPayment": "Pagamento realizado com sucesso",
   "swapsHistory": "Histórico de swaps",
   "swapsUnavailable": "As trocas estão indisponíveis de momento. Tenta novamente mais tarde.",
+  "timeAgo": {
+    "fewMoments": "Há poucos momentos",
+    "hours": {
+      "one": "Há %{count} hora",
+      "other": "Há %{count} horas"
+    },
+    "minutes": {
+      "one": "Há %{count} minuto",
+      "other": "Há %{count} minutos"
+    }
+  },
   "timeoutBlockHeight": "Limite altura bloco",
   "timeoutReached": "A altura do bloco atual é maior que a altura do bloco de tempo limite.",
   "todaysPrice": "Preço agora",
