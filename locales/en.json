@@ -85,6 +85,7 @@
   "enterYourPin": "Enter your PIN",
   "errorCantChangeAmount": "You cannot change this amount",
   "errorCreateAutoSwap": "Error while trying to create auto swap. Only 1 auto swap per wallet possible.",
+  "errorCreateInvoice": "Unable to create the invoice. Please try again.",
   "errorCreateSwap": "Error while trying to create swap. Check if you have sufficient balance.",
   "errorDeletingAutoSwap": "Error trying to delete auto swap",
   "errorDeletingWallet": "Error trying to delete wallet",
@@ -132,6 +133,7 @@
   "noNote": "No note",
   "noSwaps": "No swaps found",
   "noTransactions": "No transactions",
+  "noTransactionsYet": "No transactions yet",
   "noUsername": "No username",
   "normalSwaps": "Normal swaps",
   "note": "Note",
@@ -143,6 +145,7 @@
   "onchainToLnAddressInfo": "Will be used to receive funds if swap fails",
   "password": "Password",
   "paste": "Paste",
+  "pendingPayment": "Payment sent and still pending",
   "pinsDoNotMatch": "PINs do not match, please try again",
   "receive": "Receive",
   "receiveSpecifiedAmount": "Receive specified Amount",
@@ -193,6 +196,17 @@
   "successPayment": "Payment successful",
   "swapsHistory": "Swaps history",
   "swapsUnavailable": "Swaps are currently unavailable. Please try again later.",
+  "timeAgo": {
+    "fewMoments": "Few moments ago",
+    "hours": {
+      "one": "%{count} hour ago",
+      "other": "%{count} hours ago"
+    },
+    "minutes": {
+      "one": "%{count} minute ago",
+      "other": "%{count} minutes ago"
+    }
+  },
   "timeoutBlockHeight": "Timeout block height",
   "timeoutReached": "Current block height is higher than timeout block height",
   "todaysPrice": "Today's price",

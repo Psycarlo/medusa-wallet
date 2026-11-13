@@ -85,6 +85,7 @@
   "enterYourPin": "Introduz o teu PIN",
   "errorCantChangeAmount": "Não podes mudar a quantidade",
   "errorCreateAutoSwap": "Erro ao criar troca automática. Apenas uma troca automática por carteira.",
+  "errorCreateInvoice": "Não foi possível criar a fatura. Tenta novamente.",
   "errorCreateSwap": "Erro ao tentar criar troca. Verifica se tens sats suficientes.",
   "errorDeletingAutoSwap": "Erro ao tentar eliminar troca automática",
   "errorDeletingWallet": "Erro ao tentar eliminar a carteira",
@@ -132,6 +133,7 @@
   "noNote": "Sem nota",
   "noSwaps": "Sem swaps",
   "noTransactions": "Sem transações",
+  "noTransactionsYet": "Ainda sem transações",
   "noUsername": "Sem nome de utilizador",
   "normalSwaps": "Swaps normais",
   "note": "Nota",
@@ -143,6 +145,7 @@
   "onchainToLnAddressInfo": "Vai ser usado para receber os fundos se a troca falhar",
   "password": "Palavra-passe",
   "paste": "Colar",
+  "pendingPayment": "Pagamento enviado e ainda pendente",
   "pinsDoNotMatch": "Os PINs não coincidem, tente novamente",
   "receive": "Receber",
   "receiveSpecifiedAmount": "Receber quantidade especificada",
@@ -193,6 +196,17 @@
   "successPayment": "Pagamento realizado com sucesso",
   "swapsHistory": "Histórico de swaps",
   "swapsUnavailable": "As trocas estão indisponíveis de momento. Tenta novamente mais tarde.",
+  "timeAgo": {
+    "fewMoments": "Há poucos momentos",
+    "hours": {
+      "one": "Há %{count} hora",
+      "other": "Há %{count} horas"
+    },
+    "minutes": {
+      "one": "Há %{count} minuto",
+      "other": "Há %{count} minutos"
+    }
+  },
   "timeoutBlockHeight": "Limite altura bloco",
   "timeoutReached": "A altura do bloco atual é maior que a altura do bloco de tempo limite.",
   "todaysPrice": "Preço agora",

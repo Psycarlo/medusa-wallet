@@ -67,7 +67,11 @@ const useSettingsStore = create<SettingsState & SettingsActions>()(
     }),
     {
       name: 'medusa-settings',
-      storage: createJSONStorage(() => mmkvStorage)
+      storage: createJSONStorage(() => mmkvStorage),
+      // i18n starts in English: apply the saved language on startup
+      onRehydrateStorage: () => (state) => {
+        if (state) changeLocale(state.language)
+      }
     }
   )
 )

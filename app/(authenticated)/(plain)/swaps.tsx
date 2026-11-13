@@ -119,7 +119,7 @@ export default function Swaps() {
             return (
               <MSwapCard
                 kind="normal"
-                direction={item.direction === 'receive' ? 'in' : 'out'}
+                direction={item.type}
                 walletName={
                   wallets.find((wallet) => wallet.id === item.wallet)?.name ||
                   ''

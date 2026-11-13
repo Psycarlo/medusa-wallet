@@ -1,5 +1,6 @@
 import TimeAgo from 'react-timeago'
 
+import { t } from '@/locales'
 import { formatDate, formatTime } from '@/utils/format'
 
 import MText, { type MTextProps } from './MText'
@@ -9,21 +10,21 @@ type MTimeAgoTextProps = {
   textProps?: MTextProps
 }
 
-export default function SSTimeAgoText({
+export default function MTimeAgoText({
   timestamp,
   textProps
 }: MTimeAgoTextProps) {
-  function timeFormatter(value: number, unit: string, suffix: string) {
-    if (unit === 'second') return `Few moments ${suffix}`
-    else if (unit === 'minute' || unit === 'hour')
-      return `${value} ${unit}${value !== 1 ? 's' : ''} ${suffix}`
-    else return `${formatDate(timestamp)} ${formatTime(timestamp)}`
+  function timeFormatter(value: number, unit: string) {
+    if (unit === 'second') return t('timeAgo.fewMoments')
+    if (unit === 'minute') return t('timeAgo.minutes', { count: value })
+    if (unit === 'hour') return t('timeAgo.hours', { count: value })
+    return `${formatDate(timestamp)} ${formatTime(timestamp)}`
   }
 
   if (timestamp === 0)
     return (
       <MText size="sm" {...textProps}>
-        No transactions yet
+        {t('noTransactionsYet')}
       </MText>
     )
 

@@ -38,13 +38,15 @@ function useAppAuthentication() {
   const [pinEnabled, biometricEnabled] = useSettingsStore(
     useShallow((state) => [state.pinEnabled, state.biometricEnabled])
   )
-  const [loggedOut, authTriggered, setAuthTriggered] = useAuthStore(
-    useShallow((state) => [
-      state.loggedOut,
-      state.authTriggered,
-      state.setAuthTriggered
-    ])
-  )
+  const [loggedOut, authTriggered, setAuthTriggered, resetPinRetries] =
+    useAuthStore(
+      useShallow((state) => [
+        state.loggedOut,
+        state.authTriggered,
+        state.setAuthTriggered,
+        state.resetPinRetries
+      ])
+    )
 
   const requiresAuth = pinEnabled && !loggedOut
 
@@ -85,6 +87,7 @@ function useAppAuthentication() {
 
       if (authenticateResult.success) {
         setAuthTriggered(false)
+        resetPinRetries()
         router.replace('/')
       } else router.replace('/unlock')
     } catch {
@@ -92,7 +95,7 @@ function useAppAuthentication() {
     } finally {
       isAuthenticating.current = false
     }
-  }, [biometricEnabled, router, setAuthTriggered])
+  }, [biometricEnabled, router, setAuthTriggered, resetPinRetries])
 
   const handleAppStateChanged = useCallback(
     (nextAppState: AppStateStatus) => {
@@ -113,7 +116,8 @@ function useAppAuthentication() {
       if (isAuthenticating.current) return
 
       const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
-      if (elapsed >= LOCK_TIME || authTriggered) lockApp()
+      // A negative elapsed time means the device clock was moved back
+      if (elapsed >= LOCK_TIME || elapsed < 0 || authTriggered) lockApp()
     },
     [requiresAuth, authTriggered, lockApp]
   )

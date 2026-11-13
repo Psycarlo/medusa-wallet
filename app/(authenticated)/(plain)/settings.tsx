@@ -189,7 +189,7 @@ export default function Settings() {
                 />
                 <MSwitch
                   value={displayLowValuePercentage}
-                  onTouchStart={() =>
+                  onValueChange={() =>
                     setDisplayLowValuePercentage(!displayLowValuePercentage)
                   }
                 />
@@ -205,7 +205,7 @@ export default function Settings() {
                       : t('deactivated').toLowerCase()
                   }
                 />
-                <MSwitch value={pinEnabled} onTouchStart={handleTogglePin} />
+                <MSwitch value={pinEnabled} onValueChange={handleTogglePin} />
               </MSettingsCard.Item>
               {pinEnabled && hasBiometric && (
                 <MSettingsCard.Item onPress={handleToggleBiometric}>
@@ -219,7 +219,7 @@ export default function Settings() {
                   />
                   <MSwitch
                     value={biometricEnabled}
-                    onTouchStart={handleToggleBiometric}
+                    onValueChange={handleToggleBiometric}
                   />
                 </MSettingsCard.Item>
               )}

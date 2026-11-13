@@ -106,7 +106,14 @@ export default function Receive() {
   function createInvoice(variables: CreateInvoiceVariables) {
     createInvoiceMutation.mutate(variables, {
       onSuccess: (response) => {
-        if (!response) return
+        // createInvoice returns undefined on failure: drop the old invoice
+        if (!response) {
+          setAmount(0)
+          amountInput.reset()
+          resetQrCode()
+          toast.error(t('errorCreateInvoice'))
+          return
+        }
         setQrCodeValue(response.bolt11)
         setAddressCopyType('invoice')
         paymentWsRef.current?.close()

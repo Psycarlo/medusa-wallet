@@ -81,7 +81,10 @@ const useAuthStore = create<AuthState & AuthActions>()(
         set({
           accessToken: '',
           loggedOut: true,
-          username: ''
+          username: '',
+          email: '',
+          pinRetries: PIN_RETRIES,
+          authTriggered: false
         })
       }
     }),

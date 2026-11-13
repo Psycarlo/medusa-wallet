@@ -1,3 +1,12 @@
+import { i18n } from '@/locales'
+
+const DATE_LOCALES: Record<string, string> = { en: 'en-US', pt: 'pt-PT' }
+
+// Dates follow the app language, not the device language
+function getDateLocale() {
+  return DATE_LOCALES[i18n.locale] ?? 'en-US'
+}
+
 function formatAddress(address: string) {
   if (address.length <= 16) return address
 
@@ -21,7 +30,7 @@ function formatTime(date: Date | string | number) {
   const dateObj =
     typeof date === 'string' || typeof date === 'number' ? new Date(date) : date
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getDateLocale(), {
     hour: 'numeric',
     minute: 'numeric'
   })
@@ -34,7 +43,7 @@ function formatDate(date: Date | string | number) {
   const dateObj =
     typeof date === 'string' || typeof date === 'number' ? new Date(date) : date
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getDateLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -45,7 +54,7 @@ function formatDateTime(date: Date | string | number) {
   const dateObj =
     typeof date === 'string' || typeof date === 'number' ? new Date(date) : date
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getDateLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

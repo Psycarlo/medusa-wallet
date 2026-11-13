@@ -49,6 +49,8 @@ describe('invoice utils', () => {
 
       expect(isValidInvoice(lightningScheme1)).toBeTruthy()
       expect(isValidInvoice(lightningScheme2)).toBeTruthy()
+      expect(isValidInvoice('lightning:medusa@medusa.bz')).toBeTruthy()
+      expect(isValidInvoice('LIGHTNING:medusa@medusa.bz')).toBeTruthy()
     })
   })
 

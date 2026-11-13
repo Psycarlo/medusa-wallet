@@ -14,8 +14,10 @@ function usePay(adminkey: string) {
     // Never queue a payment while offline to run it later
     networkMode: 'always',
     mutationFn: (invoice: PayData) => lnbits.pay(invoice, adminkey),
-    onSuccess: () => {
-      toast.success(t('successPayment'))
+    onSuccess: (payment) => {
+      // LNbits returns slow payments (e.g. hold invoices) while still pending
+      if (payment?.status === 'pending') toast.info(t('pendingPayment'))
+      else toast.success(t('successPayment'))
       queryClient.invalidateQueries({ queryKey: ['user'] })
       queryClient.invalidateQueries({ queryKey: ['payments'] })
       router.navigate('/')

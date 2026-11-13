@@ -11,9 +11,11 @@ function useSwaps(adminkey: string) {
         lnbits.listReverseSwaps(adminkey)
       ])
 
-      const ordered = [...normal, ...reverse].sort(
-        (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
-      )
+      // `direction` holds the amount option, so tag swaps by their type
+      const ordered = [
+        ...normal.map((swap) => ({ ...swap, type: 'in' as const })),
+        ...reverse.map((swap) => ({ ...swap, type: 'out' as const }))
+      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
 
       return ordered
     },

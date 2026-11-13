@@ -138,7 +138,7 @@ export default function Lightning() {
       setEmail(userData.email || '')
       setWallets(userData.wallets)
       setTotalBalance(userData.totalBalance)
-      if (fiatRate) setTotalFiat(totalBalance / fiatRate)
+      if (fiatRate) setTotalFiat(userData.totalBalance / fiatRate)
 
       for (const wallet of userData.wallets) {
         if (!wsSubscriptions.current.has(wallet.inkey)) {
@@ -179,7 +179,9 @@ export default function Lightning() {
   useEffect(() => {
     if (rateIsSuccess && fiatRate) {
       setRate(fiatRate)
-      setTotalFiat(fiatRate && totalBalance / fiatRate)
+      setTotalFiat(
+        fiatRate && useWalletsStore.getState().totalBalance / fiatRate
+      )
     }
   }, [rateIsSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
 
