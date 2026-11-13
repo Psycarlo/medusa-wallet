@@ -241,23 +241,27 @@ async function getUser(accessToken: string) {
   return parsedUser
 }
 
+async function getLnbitsRate(fiat: SupportedFiatCurrencies) {
+  const response = await fetch(`${getCurrentBaseUrl()}/api/v1/rate/${fiat}`, {
+    headers
+  })
+  const json = await response.json()
+
+  return RateSchema.parse(json).rate
+}
+
+/**
+ * Sats per unit of `fiat`. LNbits only serves the currencies its admin
+ * allowed (`/api/v1/currencies`), so the others come from the Medusa API.
+ */
 async function rate(fiat: SupportedFiatCurrencies) {
-  try {
-    if (!fiat) throw new Error('Fiat not found')
+  const { data: lnbitsRate } = await tryCatch(getLnbitsRate(fiat))
+  if (lnbitsRate) return lnbitsRate
 
-    const response = await fetch(`${getCurrentBaseUrl()}/api/v1/rate/${fiat}`, {
-      headers
-    })
-    const json = await response.json()
+  const prices = await medusa.getBitcoinPricesAt(Math.floor(Date.now() / 1000))
+  if (!prices[fiat]) throw new Error('Rate not loaded')
 
-    const result = RateSchema.safeParse(json)
-
-    if (result.error) throw new Error('Rate not loaded')
-
-    return result.data.rate
-  } catch (_error) {
-    //
-  }
+  return SATOSHIS_IN_BITCOIN / prices[fiat]
 }
 
 type GetPaginatedPaymentsOptions = {

@@ -55,10 +55,8 @@ export default function Lightning() {
     wallets,
     walletColors,
     totalBalance,
-    totalFiat,
     setWallets,
     setTotalBalance,
-    setTotalFiat,
     setTransactions,
     setPaylink
   ] = useWalletsStore(
@@ -66,10 +64,8 @@ export default function Lightning() {
       state.wallets,
       state.walletColors,
       state.totalBalance,
-      state.totalFiat,
       state.setWallets,
       state.setTotalBalance,
-      state.setTotalFiat,
       state.setTransactions,
       state.setPaylink
     ])
@@ -101,7 +97,7 @@ export default function Lightning() {
     !!userData?.wallets
   )
 
-  const { data: fiatRate, isSuccess: rateIsSuccess } = useQuery({
+  const { data: fiatRate } = useQuery({
     queryKey: ['rate', fiatCurrency],
     queryFn: () => lnbits.rate(fiatCurrency),
     enabled: !!fiatCurrency
@@ -138,7 +134,6 @@ export default function Lightning() {
       setEmail(userData.email || '')
       setWallets(userData.wallets)
       setTotalBalance(userData.totalBalance)
-      if (fiatRate) setTotalFiat(userData.totalBalance / fiatRate)
 
       for (const wallet of userData.wallets) {
         if (!wsSubscriptions.current.has(wallet.inkey)) {
@@ -176,14 +171,10 @@ export default function Lightning() {
     }
   }, [paylinkIsSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Every fetched rate, including refetches of the same currency
   useEffect(() => {
-    if (rateIsSuccess && fiatRate) {
-      setRate(fiatRate)
-      setTotalFiat(
-        fiatRate && useWalletsStore.getState().totalBalance / fiatRate
-      )
-    }
-  }, [rateIsSuccess]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (fiatRate) setRate(fiatRate)
+  }, [fiatRate, setRate])
 
   useEffect(() => {
     if (paymentsIsSuccess && payments && !paymentsIsFetching) {
@@ -249,7 +240,7 @@ export default function Lightning() {
           </MHStack>
           <MText>
             {fiat.getSymbol(fiatCurrency)}
-            {formatNumber(totalFiat, 2)}
+            {formatNumber(rate && totalBalance / rate, 2)}
           </MText>
         </MVStack>
         <MHStack
