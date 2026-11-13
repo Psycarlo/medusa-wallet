@@ -1,7 +1,7 @@
 import type BottomSheet from '@gorhom/bottom-sheet'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { Keyboard, type TextInputInstance } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
@@ -20,27 +20,33 @@ import MQRCode from '@/components/MQRCode'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
 import MTimer from '@/components/MTimer'
-import { EXPIRATION_TIME } from '@/config/medusa'
 import useAmountInput from '@/hooks/useAmountInput'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import {
+  getReceiveRequest,
+  initialReceiveState,
+  receiveReducer
+} from '@/machines/receive'
 import { useFiatStore } from '@/store/fiat'
 import { useSettingsStore } from '@/store/settings'
 import { useWalletsStore } from '@/store/wallets'
 import { type ReceiveSearchParams } from '@/types/searchParams'
 import fiatUtils from '@/utils/fiat'
 import { formatNumber } from '@/utils/format'
+import { getInvoiceExpiry } from '@/utils/invoice'
 import { getPaylinkAddress } from '@/utils/medusa'
 import { getDefaultWallet, isDefaultWallet } from '@/utils/wallet'
 
 // If no walletId is provided, the default wallet will be used
 // If is the default wallet, we display the paylink lnurl
-// If is not the default wallet, we display bolt11 with 1 sat
+// If is not the default wallet, an amount is needed to display a bolt11
 // If is the default wallet and user wants to add amount, we display
 // bolt11 with that amount (and label if provided)
+// A paid or expired bolt11 is replaced by the above (see machines/receive.ts)
 
 export default function Receive() {
   const queryClient = useQueryClient()
@@ -59,17 +65,20 @@ export default function Receive() {
     ? wallets.find((wallet) => wallet.id === walletId)
     : getDefaultWallet(wallets)
 
-  // Default wallet shows the paylink (lightning address), others need an invoice
-  const [addressCopyType, setAddressCopyType] = useState<'address' | 'invoice'>(
-    defaultWallet ? 'address' : 'invoice'
+  const [state, dispatch] = useReducer(receiveReducer, initialReceiveState)
+  const { amount, comment } = state
+  // Only the default wallet owns the paylink (lightning address)
+  const request = getReceiveRequest(
+    state,
+    defaultWallet ? paylink?.lnurl : undefined
   )
-  const [qrCodeValue, setQrCodeValue] = useState(
-    defaultWallet ? (paylink?.lnurl ?? '') : ''
-  )
-  const isQrCodePlaceholder = !defaultWallet
-
-  const [amount, setAmount] = useState(0)
-  const [comment, setComment] = useState('')
+  const isInvoice = request.type !== 'address'
+  const qrCodeValue =
+    request.type === 'invoice'
+      ? request.bolt11
+      : request.type === 'address'
+        ? request.lnurl
+        : ''
 
   const [localComment, setLocalComment] = useState('')
 
@@ -106,50 +115,73 @@ export default function Receive() {
   function createInvoice(variables: CreateInvoiceVariables) {
     createInvoiceMutation.mutate(variables, {
       onSuccess: (response) => {
+        paymentWsRef.current?.close()
         // createInvoice returns undefined on failure: drop the old invoice
         if (!response) {
-          setAmount(0)
+          dispatch({ type: 'INVOICE_FAILED' })
           amountInput.reset()
-          resetQrCode()
           toast.error(t('errorCreateInvoice'))
           return
         }
-        setQrCodeValue(response.bolt11)
-        setAddressCopyType('invoice')
-        paymentWsRef.current?.close()
+        const { bolt11 } = response
+        dispatch({
+          type: 'INVOICE_CREATED',
+          invoice: {
+            bolt11,
+            // One second earlier, to never show an invoice that just expired
+            expiresAt: Date.now() + (getInvoiceExpiry(bolt11) - 1) * 1000
+          }
+        })
         paymentWsRef.current = lnbits.subscribePaymentWs(
           response.payment_hash,
           () => {
             toast.success(`+${formatNumber(variables.amount)} sats!`)
             queryClient.invalidateQueries({ queryKey: ['user'] })
             queryClient.invalidateQueries({ queryKey: ['payments'] })
+            // A paid invoice can't be paid again
+            settleInvoice(bolt11)
           }
         )
       }
     })
   }
 
+  function settleInvoice(bolt11: string) {
+    dispatch({ type: 'INVOICE_SETTLED', bolt11 })
+    amountInput.reset()
+  }
+
+  function handleInvoiceExpired(bolt11: string) {
+    paymentWsRef.current?.close()
+    settleInvoice(bolt11)
+    toast.info(t('invoiceExpired'), { duration: 3000 })
+  }
+
+  // Drops the invoice, including one that is still being created
+  function clearAmount() {
+    createInvoiceMutation.reset()
+    paymentWsRef.current?.close()
+    dispatch({ type: 'AMOUNT_CLEARED' })
+    amountInput.reset()
+  }
+
   function handleConfirmAmount() {
     const satsAmount = amountInput.sats
     const memo = comment ? comment : undefined
     if (currentWallet && satsAmount > 0) {
-      setAmount(satsAmount)
+      dispatch({ type: 'AMOUNT_SET', amount: satsAmount })
       createInvoice({
         amount: satsAmount,
         inkey: currentWallet.inkey,
         memo
       })
-    } else {
-      setAmount(0)
-      amountInput.reset()
-      resetQrCode()
-    }
+    } else clearAmount()
     bottomSheetAmountRef.current?.close()
   }
 
   function handleConfirmComment() {
     const newComment = localComment.trim()
-    setComment(newComment)
+    dispatch({ type: 'COMMENT_SET', comment: newComment })
     bottomSheetCommentRef.current?.close()
     if (!amount)
       toast.info(t('addAmountToLightningInvoice'), { duration: 3000 })
@@ -163,31 +195,16 @@ export default function Receive() {
   }
 
   function handleClearAmount() {
-    setAmount(0)
-    amountInput.reset()
-    resetQrCode()
+    clearAmount()
     if (comment)
       toast.info(t('addAmountToLightningInvoice'), { duration: 3000 })
     bottomSheetAmountRef.current?.close()
   }
 
   function handleClearComment() {
-    setComment('')
+    dispatch({ type: 'COMMENT_SET', comment: '' })
     setLocalComment('')
-    if (!amount) resetQrCode()
     bottomSheetCommentRef.current?.close()
-  }
-
-  // Only the default wallet owns the paylink; other wallets need an invoice
-  function resetQrCode() {
-    paymentWsRef.current?.close()
-    if (defaultWallet && paylink) {
-      setQrCodeValue(paylink.lnurl)
-      setAddressCopyType('address')
-    } else {
-      setQrCodeValue('')
-      setAddressCopyType('invoice')
-    }
   }
 
   if (!currentWallet || !paylink) return <Redirect href="/" />
@@ -208,9 +225,13 @@ export default function Receive() {
           ),
           headerRight: () => (
             <>
-              {addressCopyType === 'invoice' && qrCodeValue && (
+              {request.type === 'invoice' && (
                 <MFormLayout.Item center>
-                  <MTimer initial={EXPIRATION_TIME} key={qrCodeValue} />
+                  <MTimer
+                    key={request.bolt11}
+                    expiresAt={request.expiresAt}
+                    onExpire={() => handleInvoiceExpired(request.bolt11)}
+                  />
                 </MFormLayout.Item>
               )}
             </>
@@ -221,34 +242,24 @@ export default function Receive() {
         <MFormLayout style={{ gap: 16 }}>
           <MFormLayout.Item center>
             <MFormLayout.Label
-              label={
-                addressCopyType === 'address'
-                  ? t('lightningUrl')
-                  : t('lightningInvoice')
-              }
+              label={isInvoice ? t('lightningInvoice') : t('lightningUrl')}
               center
             />
             <MQRCode
               value={qrCodeValue}
               loading={createInvoiceMutation.isPending}
-              placeholder={isQrCodePlaceholder}
+              placeholder={!defaultWallet}
             />
           </MFormLayout.Item>
           <MFormLayout.Item>
             <MFormLayout.Label
-              label={
-                addressCopyType === 'address'
-                  ? t('lightningAddress')
-                  : t('lightningInvoice')
-              }
+              label={isInvoice ? t('lightningInvoice') : t('lightningAddress')}
             />
             <MAddressCopy
               address={
-                addressCopyType === 'address'
-                  ? getPaylinkAddress(paylink.username)
-                  : qrCodeValue
+                isInvoice ? qrCodeValue : getPaylinkAddress(paylink.username)
               }
-              noFormat={addressCopyType === 'address'}
+              noFormat={!isInvoice}
               placeholder={t('invoiceWillShowHere')}
             />
           </MFormLayout.Item>
