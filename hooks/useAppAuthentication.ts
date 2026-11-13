@@ -1,5 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication'
 import { usePathname, useRouter } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
 import { useCallback, useEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import { AppState, type AppStateStatus } from 'react-native'
@@ -40,9 +41,7 @@ import { useSettingsStore } from '@/store/settings'
  */
 function useAppAuthentication() {
   const coldStart = useRef(true)
-  const appState = useRef<AppStateStatus>(
-    (AppState.currentState as AppStateStatus | null) ?? 'unknown'
-  )
+  const appState = useRef<AppStateStatus>('active')
   const router = useRouter()
   const pathname = usePathname()
   const lastRoute = useRef<string | null>(null)
@@ -64,8 +63,46 @@ function useAppAuthentication() {
     }
   }, [pathname])
 
+  // Locks the app: tries biometrics first (when enabled and available) and
+  // falls back to the PIN screen. `replace` keeps the locked screen out of the
+  // history so the back button can't return to it.
+  const lockApp = useCallback(async () => {
+    setAuthTriggered(true)
+
+    if (!biometricEnabled) {
+      router.replace('/unlock')
+      return
+    }
+
+    // Hide the current screen while checking biometrics
+    router.replace('/(modals)/empty')
+
+    const [hasHardware, isEnrolled, enrolledLevel] = await Promise.all([
+      LocalAuthentication.hasHardwareAsync(),
+      LocalAuthentication.isEnrolledAsync(),
+      LocalAuthentication.getEnrolledLevelAsync()
+    ])
+
+    if (!hasHardware || !isEnrolled || enrolledLevel < ALLOWED_ENROLLED_LEVEL) {
+      router.replace('/unlock')
+      return
+    }
+
+    const authenticateResult = await LocalAuthentication.authenticateAsync({
+      disableDeviceFallback: true
+    })
+
+    if (authenticateResult.success) {
+      setAuthTriggered(false)
+      router.replace('/')
+    } else router.replace('/unlock')
+  }, [biometricEnabled, router, setAuthTriggered])
+
   const handleAppStateChanged = useCallback(
     async (nextAppState: AppStateStatus) => {
+      const previousAppState = appState.current
+      appState.current = nextAppState
+
       const requiresAuth = pinEnabled && !loggedOut
 
       if (requiresAuth && nextAppState === 'background') {
@@ -77,82 +114,53 @@ function useAppAuthentication() {
         (Platform.OS === 'android' && nextAppState === 'background')
       ) {
         router.replace('/(modals)/privacy') // Note: does not update app preview on android
-      } else if (
-        nextAppState === 'active' &&
-        appState.current.match(/background|inactive/)
-      ) {
-        const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
+        return
+      }
 
-        // If back active within grace period go back to packge if camera, send or receive
-        if (elapsed <= GRACE_PERIOD_TIME) {
-          if (
-            lastRoute.current &&
-            ['camera', 'send', 'receive'].some((p) =>
-              lastRoute.current?.includes(p)
-            )
-          ) {
-            router.replace(lastRoute.current as any)
-            return
-          }
-        }
+      if (
+        nextAppState !== 'active' ||
+        !previousAppState.match(/background|inactive/)
+      )
+        return
 
-        if (!requiresAuth) {
-          router.replace('/')
-        } else {
-          if (elapsed >= LOCK_TIME || authTriggered) {
-            setAuthTriggered(true)
-            if (!biometricEnabled) router.navigate('/unlock')
-            else {
-              // Tries biometric first with black background (if enabled)
-              const [hasHardware, isEnrolled, enrolledLevel] =
-                await Promise.all([
-                  LocalAuthentication.hasHardwareAsync(),
-                  LocalAuthentication.isEnrolledAsync(),
-                  LocalAuthentication.getEnrolledLevelAsync()
-                ])
-              if (
-                !hasHardware ||
-                !isEnrolled ||
-                enrolledLevel < ALLOWED_ENROLLED_LEVEL
-              )
-                router.navigate('/unlock')
-              else {
-                router.replace('/(modals)/empty')
+      const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
 
-                const authenticateResult =
-                  await LocalAuthentication.authenticateAsync({
-                    disableDeviceFallback: true
-                  })
-
-                if (authenticateResult.success) {
-                  setAuthTriggered(false)
-                  router.replace('/')
-                } else router.navigate('/unlock')
-              }
-            }
-          } else {
-            router.replace('/')
-          }
+      // If back active within grace period go back to camera, send or receive
+      if (elapsed <= GRACE_PERIOD_TIME && !authTriggered) {
+        if (
+          lastRoute.current &&
+          ['camera', 'send', 'receive'].some((p) =>
+            lastRoute.current?.includes(p)
+          )
+        ) {
+          router.replace(lastRoute.current as any)
+          return
         }
       }
 
-      appState.current = nextAppState
+      if (requiresAuth && (elapsed >= LOCK_TIME || authTriggered)) {
+        await lockApp()
+        return
+      }
+
+      router.replace('/')
     },
-    [
-      appState,
-      router,
-      pinEnabled,
-      biometricEnabled,
-      loggedOut,
-      authTriggered,
-      setAuthTriggered
-    ]
+    [router, pinEnabled, loggedOut, authTriggered, lockApp]
   )
 
   useEffect(() => {
+    // A cold start always requires authentication when the PIN is enabled.
+    // The splash screen stays up until the locked screen is in place so the
+    // wallet is never visible before authenticating.
     if (coldStart.current) {
-      handleAppStateChanged(appState.current)
       coldStart.current = false
+      if (pinEnabled && !loggedOut) {
+        lockApp().finally(() =>
+          requestAnimationFrame(() => SplashScreen.hide())
+        )
+      } else {
+        SplashScreen.hide()
+      }
     }
 
     const subscription = AppState.addEventListener(
@@ -161,7 +169,7 @@ function useAppAuthentication() {
     )
 
     return () => subscription.remove()
-  }, [handleAppStateChanged])
+  }, [handleAppStateChanged]) // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 export default useAppAuthentication

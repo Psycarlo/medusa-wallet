@@ -11,7 +11,7 @@ import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import * as SystemUI from 'expo-system-ui'
-import { useCallback } from 'react'
+import { useEffect } from 'react'
 import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -20,10 +20,9 @@ import { Toaster } from 'sonner-native'
 import useAppAuthentication from '@/hooks/useAppAuthentication'
 import { Colors } from '@/styles'
 
+// Hidden by useAppAuthentication once the first screen is decided
 SplashScreen.preventAutoHideAsync()
 SplashScreen.setOptions({ duration: 300, fade: true })
-
-SystemUI.setBackgroundColorAsync(Colors.dark)
 
 const queryClient = new QueryClient()
 
@@ -38,11 +37,13 @@ export default function RootLayout() {
   useReactQueryDevTools(queryClient)
   useAppAuthentication()
 
-  const handleLayout = useCallback(() => SplashScreen.hide(), [])
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(Colors.dark).catch(() => {})
+  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={styles.container} onLayout={handleLayout}>
+      <GestureHandlerRootView style={styles.container}>
         <KeyboardProvider>
           <StatusBar style="light" />
           <Slot />

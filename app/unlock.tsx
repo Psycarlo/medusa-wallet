@@ -1,6 +1,7 @@
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
+import { BackHandler } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -40,6 +41,15 @@ export default function Unlock() {
 
   const [pin, setPin] = useState('')
   const [failedOnce, setFailedOnce] = useState(false)
+
+  // The app is locked: don't let the back button skip authentication
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => true
+    )
+    return () => subscription.remove()
+  }, [])
 
   function handleOnKeyPress(key: Keys) {
     if (key === 'DEL') setPin((prev) => prev.slice(0, -1))
