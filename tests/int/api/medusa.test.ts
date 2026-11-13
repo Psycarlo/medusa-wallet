@@ -11,6 +11,11 @@ describe('medusa api', () => {
       expect(fiatBitcoinPrices.ron).toBe(447676.84)
     })
 
+    it('should not return prices far from the requested time', async () => {
+      // The price history starts in January 2025
+      await expect(medusa.getBitcoinPricesAt(1700000000)).rejects.toThrow()
+    })
+
     it('should return correct fiat values', async () => {
       const fiatValues = await medusa.getPricesAt(1000, 1736446030)
 
