@@ -1,9 +1,9 @@
-import { Redirect, Tabs, useRouter } from 'expo-router'
+import { Redirect, useRouter } from 'expo-router'
+import { Tabs } from 'expo-router/js-tabs'
 import { View } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
 import Bridge from '@/components/icons/Bridge'
-import CreditCard from '@/components/icons/CreditCard'
 import Scan from '@/components/icons/Scan'
 import Settings from '@/components/icons/Settings'
 import Zap from '@/components/icons/Zap'
@@ -25,7 +25,6 @@ export default function TabsLayout() {
   return (
     <View style={{ flex: 1 }}>
       <Tabs
-        initialRouteName="index"
         screenOptions={{
           sceneStyle: {
             backgroundColor: Colors.dark
@@ -65,13 +64,6 @@ export default function TabsLayout() {
           options={{
             title: t('wallets'),
             tabBarIcon: ({ focused }) => <Zap active={focused} />
-          }}
-        />
-        <Tabs.Screen
-          name="buy"
-          options={{
-            title: t('buySats'),
-            tabBarIcon: ({ focused }) => <CreditCard active={focused} />
           }}
         />
         <Tabs.Screen

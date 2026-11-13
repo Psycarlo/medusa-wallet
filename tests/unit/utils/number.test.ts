@@ -10,6 +10,9 @@ describe('number utils', () => {
       expect(number.getDecimalPlaces(0.000007)).toBe(6)
       expect(number.getDecimalPlaces(0.0000002)).toBe(7)
       expect(number.getDecimalPlaces(0.00000001)).toBe(8)
+      expect(number.getDecimalPlaces(0.00000025)).toBe(8)
+      expect(number.getDecimalPlaces(0.000024975)).toBe(8)
+      expect(number.getDecimalPlaces(0.1 + 0.2)).toBe(1)
     })
   })
 

@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 
 import { PIN_KEY, PIN_RETRIES } from '@/config/auth'
 import { getItem, setItem } from '@/storage/encrypted'
-import mmkvStorage from '@/storage/mmkv'
+import { mmkvStorage } from '@/storage/mmkv'
 
 type AuthState = {
   firstTime: boolean

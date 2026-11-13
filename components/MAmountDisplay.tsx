@@ -16,6 +16,8 @@ export type MAmountDisplayType = 'btc' | 'fiat'
 type MAmountDisplayProps = {
   type?: MAmountDisplayType
   sats: number
+  /** Overrides the formatted bitcoin amount (e.g. the value being typed) */
+  amountText?: string
   fiat?: number
   fiatCurrency: SupportedFiatCurrencies
   rate: number
@@ -27,6 +29,7 @@ type MAmountDisplayProps = {
 export default function MAmountDisplay({
   type = 'btc',
   sats,
+  amountText,
   fiat,
   fiatCurrency,
   rate,
@@ -50,7 +53,7 @@ export default function MAmountDisplay({
         <MVStack gap="xs" itemsCenter style={{ flex: 1 }}>
           <MHStack gap="xs" style={{ alignItems: 'baseline' }}>
             <MText size="2xl" weight="bold">
-              {getFormattedBitcoinUnitAmount(sats)}
+              {amountText ?? getFormattedBitcoinUnitAmount(sats)}
             </MText>
             <MText size="lg" color="muted" weight="bold">
               {getFormattedBitcoinUnitLabel()}

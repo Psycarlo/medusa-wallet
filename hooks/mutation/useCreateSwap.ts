@@ -10,13 +10,15 @@ function useCreateSwap(adminkey: string) {
 
   return useMutation({
     mutationKey: ['createSwap'],
+    // Never queue a payment while offline to run it later
+    networkMode: 'always',
     mutationFn: (data: CreateSwapData) => lnbits.createSwap(data, adminkey),
     onSuccess: () => {
       toast.success(t('createdSwap'))
       router.navigate('/swaps')
     },
-    onError: () => {
-      toast.error(t('errorCreateSwap'))
+    onError: (error) => {
+      toast.error(t('errorCreateSwap'), { description: error.message })
     }
   })
 }

@@ -13,9 +13,9 @@ import {
   AuthSchema,
   AutoSwapSchema,
   BoltzConfigurationSchema,
-  ConversionSchema,
   InkeyWebsocketSchema,
   InvoiceSchema,
+  LnurlPayCallbackSchema,
   LnurlSchema,
   PaylinkSchema,
   PaymentSchema,
@@ -26,9 +26,11 @@ import {
   WalletSchema,
   WebsocketSchema
 } from '@/schemas/lnbits'
+import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import type { FiatSnapshot } from '@/types/fiat'
 import type { Payment } from '@/types/lnbits'
+import bolt11 from '@/utils/bolt11'
 import { getHistoricalPricesMap } from '@/utils/medusa'
 import parse from '@/utils/parse'
 import { generateRandomAddress } from '@/utils/random'
@@ -36,12 +38,23 @@ import { tryCatch } from '@/utils/tryCatch'
 
 import medusa from './medusa'
 
-export const BASE_URL = 'https://wallet.medusa.bz'
-
 const headers = { 'Content-Type': 'application/json' }
 
 function getCurrentBaseUrl() {
   return useSettingsStore.getState().lnbitsUrl
+}
+
+// User-level endpoints (wallet create/delete, auth) require the access token
+// since LNbits v1. Older versions accept the admin key instead, so we send both.
+function authHeaders(
+  accessToken = useAuthStore.getState().accessToken
+): Record<string, string> {
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+}
+
+// Price API expects unix seconds
+function toUnixSeconds(date: string) {
+  return Math.floor(new Date(date).getTime() / 1000)
 }
 
 async function register(username: string, email: string, password: string) {
@@ -173,14 +186,32 @@ async function getPaylinks(inkey: string) {
     )
   }
 
-  return [...data.map((paylink) => parse.fromLnbitsPaylinkToPaylink(paylink))]
+  return data
+    .filter((paylink) => !!paylink.username)
+    .map((paylink) => parse.fromLnbitsPaylinkToPaylink(paylink))
+}
+
+// Session is no longer valid (as opposed to network or server errors)
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('Unauthorized')
+    this.name = 'UnauthorizedError'
+  }
 }
 
 async function getUser(accessToken: string) {
   const response = await fetch(`${getCurrentBaseUrl()}/api/v1/auth`, {
-    headers: { ...headers, Cookie: `cookie_access_token=${accessToken}` },
+    headers: {
+      ...headers,
+      ...authHeaders(accessToken),
+      Cookie: `cookie_access_token=${accessToken}`
+    },
     method: 'GET'
   })
+
+  if (response.status === 401 || response.status === 403)
+    throw new UnauthorizedError()
+
   const json = await response.json()
 
   const { data, error } = UserSchema.safeParse(json)
@@ -210,23 +241,6 @@ async function getUser(accessToken: string) {
   return parsedUser
 }
 
-async function convert(sats: number, fiat: SupportedFiatCurrencies) {
-  try {
-    const response = await fetch(`${getCurrentBaseUrl()}/api/v1/conversion`, {
-      headers,
-      method: 'POST',
-      body: JSON.stringify({ from: 'sats', amount: sats, to: fiat })
-    })
-    const json = await response.json()
-
-    const data = ConversionSchema.parse(json)
-
-    return data[fiat]
-  } catch (_error) {
-    //
-  }
-}
-
 async function rate(fiat: SupportedFiatCurrencies) {
   try {
     if (!fiat) throw new Error('Fiat not found')
@@ -244,69 +258,6 @@ async function rate(fiat: SupportedFiatCurrencies) {
   } catch (_error) {
     //
   }
-}
-
-async function getPayments(inkey: string) {
-  const url = new URL(`${getCurrentBaseUrl()}/api/v1/payments`)
-  url.searchParams.append('status', 'success')
-  url.searchParams.append('direction', 'desc')
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      ...headers,
-      'x-api-key': inkey
-    },
-    method: 'GET'
-  })
-  const json = await response.json()
-
-  const PaymentsArraySchema = z.array(PaymentSchema)
-  const { data, error } = PaymentsArraySchema.safeParse(json)
-
-  if (error) {
-    const errorData = ValidationErrorSchema.parse(json)
-
-    throw new Error(
-      typeof errorData.detail === 'string'
-        ? errorData.detail
-        : errorData.detail[0].msg
-    )
-  }
-
-  const historicalPricesMap = getHistoricalPricesMap(
-    data.map((payment) => ({
-      id: payment.payment_hash,
-      timestamp: new Date(payment.time).getTime()
-    }))
-  )
-
-  const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
-
-  for (const [timestamp, ids] of Object.entries(historicalPricesMap)) {
-    const ts = Number(timestamp)
-
-    const fiatSnapshot = await medusa.getBitcoinPricesAt(ts)
-
-    for (const id of ids) {
-      fiatSnapshotForIds[id] = fiatSnapshot
-    }
-  }
-
-  return data
-    .map((payment) => parse.fromLnbitsPaymentToTransaction(payment))
-    .map((transaction) => ({
-      ...transaction,
-      fiatSnapshot: Object.fromEntries(
-        Object.entries(fiatSnapshotForIds[transaction.id]).map(
-          ([fiat, btcPrice]) => [
-            fiat,
-            Number(
-              ((transaction.sats / SATOSHIS_IN_BITCOIN) * btcPrice).toFixed(2)
-            )
-          ]
-        )
-      ) as FiatSnapshot
-    }))
 }
 
 type GetPaginatedPaymentsOptions = {
@@ -358,46 +309,73 @@ async function getPaginatedPayments(
   const historicalPricesMap = getHistoricalPricesMap(
     data.map((payment) => ({
       id: payment.payment_hash,
-      timestamp: new Date(payment.time).getTime()
+      timestamp: toUnixSeconds(payment.time)
     }))
   )
 
-  const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
-
-  for (const [timestamp, ids] of Object.entries(historicalPricesMap)) {
-    let fiatSnapshot: FiatSnapshot
-
-    if (snapshots[timestamp]) {
-      fiatSnapshot = snapshots[timestamp]
-    } else {
-      const ts = Number(timestamp)
-      fiatSnapshot = await medusa.getBitcoinPricesAt(ts)
-    }
-
-    for (const id of ids) {
-      fiatSnapshotForIds[id] = fiatSnapshot
-      addSnapshot(timestamp, fiatSnapshot)
-    }
-  }
+  const fiatSnapshotForIds = await getFiatSnapshots(
+    historicalPricesMap,
+    snapshots,
+    addSnapshot
+  )
 
   return data
     .map((payment) => parse.fromLnbitsPaymentToTransaction(payment))
-    .map((transaction) => ({
-      ...transaction,
-      fiatSnapshot: Object.fromEntries(
-        Object.entries(fiatSnapshotForIds[transaction.id]).map(
-          ([fiat, btcPrice]) => [
+    .map((transaction) => {
+      const snapshot = fiatSnapshotForIds[transaction.id]
+      if (!snapshot) return transaction
+      return {
+        ...transaction,
+        fiatSnapshot: Object.fromEntries(
+          Object.entries(snapshot).map(([fiat, btcPrice]) => [
             fiat,
             Number(
               ((transaction.sats / SATOSHIS_IN_BITCOIN) * btcPrice).toFixed(2)
             )
-          ]
-        )
-      ) as FiatSnapshot
-    }))
+          ])
+        ) as FiatSnapshot
+      }
+    })
+}
+
+// Bitcoin prices at each payment time, fetched in parallel and cached.
+// A failed lookup only leaves those payments without a fiat value.
+async function getFiatSnapshots(
+  historicalPricesMap: Record<number, string[]>,
+  snapshots: Record<string, FiatSnapshot>,
+  addSnapshot: (timestamp: string, snapshot: FiatSnapshot) => void
+) {
+  const entries = Object.entries(historicalPricesMap)
+
+  const results = await Promise.allSettled(
+    entries.map(async ([timestamp]) => {
+      if (snapshots[timestamp]) return snapshots[timestamp]
+      const snapshot = await medusa.getBitcoinPricesAt(Number(timestamp))
+      addSnapshot(timestamp, snapshot)
+      return snapshot
+    })
+  )
+
+  const fiatSnapshotForIds: Record<string, FiatSnapshot> = {}
+  results.forEach((result, index) => {
+    if (result.status !== 'fulfilled') return
+    for (const id of entries[index][1]) fiatSnapshotForIds[id] = result.value
+  })
+
+  return fiatSnapshotForIds
 }
 
 // TODO: getPaymentByHash
+
+// Ignores malformed messages instead of throwing inside the event handler
+function parseWebsocketMessage<T>(data: unknown, schema: z.ZodType<T>) {
+  try {
+    const result = schema.safeParse(JSON.parse(String(data)))
+    return result.success ? result.data : null
+  } catch {
+    return null
+  }
+}
 
 function subscribePaymentWs(
   paymentHash: Payment['payment_hash'],
@@ -408,12 +386,11 @@ function subscribePaymentWs(
   url.pathname = `/api/v1/ws/${paymentHash}`
 
   const webSocket = new WebSocket(url.toString())
-  webSocket.addEventListener('message', async ({ data }) => {
-    const json = JSON.parse(data)
+  webSocket.addEventListener('message', ({ data }) => {
+    const parsedData = parseWebsocketMessage(data, WebsocketSchema)
+    if (!parsedData) return
 
-    const parsedData = WebsocketSchema.parse(json)
-
-    if (!parsedData.pending || parsedData.paid) {
+    if (parsedData.paid === true || parsedData.pending === false) {
       callback()
       webSocket.close()
     }
@@ -428,10 +405,9 @@ function subscribeInkeyWs(inkey: string, callback: (amount: number) => void) {
   url.pathname = `/api/v1/ws/${inkey}`
 
   const webSocket = new WebSocket(url.toString())
-  webSocket.addEventListener('message', async ({ data }) => {
-    const json = JSON.parse(data)
-
-    const parsedData = InkeyWebsocketSchema.parse(json)
+  webSocket.addEventListener('message', ({ data }) => {
+    const parsedData = parseWebsocketMessage(data, InkeyWebsocketSchema)
+    if (!parsedData) return
 
     if (
       parsedData.payment?.status === 'success' &&
@@ -449,6 +425,7 @@ async function createWallet(name: string, adminkey: string) {
     const response = await fetch(`${getCurrentBaseUrl()}/api/v1/wallet`, {
       headers: {
         ...headers,
+        ...authHeaders(),
         'x-api-key': adminkey
       },
       method: 'POST',
@@ -482,14 +459,15 @@ async function updateWalletName(name: string, adminkey: string) {
 }
 
 async function deleteWallet(walletId: string, adminkey: string) {
-  try {
-    await fetch(`${getCurrentBaseUrl()}/api/v1/wallet/${walletId}`, {
-      headers: { ...headers, 'x-api-key': adminkey },
+  const response = await fetch(
+    `${getCurrentBaseUrl()}/api/v1/wallet/${walletId}`,
+    {
+      headers: { ...headers, ...authHeaders(), 'x-api-key': adminkey },
       method: 'DELETE'
-    })
-  } catch (_error) {
-    //
-  }
+    }
+  )
+
+  if (!response.ok) throw new Error('Unable to delete wallet')
 }
 
 async function createInvoice(amount: number, inkey: string, memo?: string) {
@@ -516,11 +494,10 @@ type PayBolt11 = {
 
 type PayLnurl = {
   type: 'lnurl'
+  /** LNURL-pay callback url */
   callback: string
   amount: number // in sats
   comment?: string
-  descriptionHash: string
-  description: string
 }
 
 export type PayData = PayBolt11 | PayLnurl
@@ -561,37 +538,38 @@ async function payInvoice(invoice: string, adminkey: string) {
   return data
 }
 
-// Pays lnurl invoice
+// Pays a LNURL-pay request (LUD-06/LUD-16): requests an invoice from the
+// callback and pays it. Done client side so it works with any LNbits version.
 async function payLnurl(payload: Omit<PayLnurl, 'type'>, adminkey: string) {
-  const response = await fetch(`${getCurrentBaseUrl()}/api/v1/payments/lnurl`, {
-    headers: {
-      ...headers,
-      'x-api-key': adminkey
-    },
-    method: 'POST',
-    body: JSON.stringify({
-      description_hash: payload.descriptionHash,
-      description: payload.description,
-      callback: payload.callback,
-      amount: payload.amount * 1_000, // in millisats
-      unit: 'sat',
-      ...(payload.comment ? { comment: payload.comment } : {})
-    })
-  })
-  const json = await response.json()
+  const amountMsat = payload.amount * 1_000
 
-  const { data, error } = PaymentSchema.safeParse(json)
-  if (error) {
-    const errorData = ValidationErrorSchema.parse(json)
+  const url = new URL(payload.callback)
+  url.searchParams.append('amount', String(amountMsat))
+  if (payload.comment) url.searchParams.append('comment', payload.comment)
 
-    throw new Error(
-      typeof errorData.detail === 'string'
-        ? errorData.detail
-        : errorData.detail[0].msg
+  const { data: response, error: fetchError } = await tryCatch(
+    fetch(url.toString())
+  )
+  if (fetchError) throw new Error('Unable to reach the recipient')
+
+  const { data: json } = await tryCatch(response.json())
+  const { data } = LnurlPayCallbackSchema.safeParse(json)
+
+  if (!data?.pr) throw new Error(data?.reason || 'Invalid recipient response')
+
+  // Never pay an invoice for a different amount than requested
+  let invoiceAmountMsat = NaN
+  try {
+    invoiceAmountMsat = Number(
+      bolt11.decode(data.pr).human_readable_part.amount
     )
+  } catch {
+    //
   }
+  if (invoiceAmountMsat !== amountMsat)
+    throw new Error('Recipient returned an invalid invoice')
 
-  return data
+  return payInvoice(data.pr, adminkey)
 }
 
 // Swaps with Boltz
@@ -803,9 +781,7 @@ export default {
   register,
   login,
   getUser,
-  convert,
   rate,
-  getPayments,
   getPaginatedPayments,
   getPaylinks,
   createPaylink,

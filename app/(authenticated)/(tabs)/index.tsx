@@ -7,8 +7,7 @@ import { RefreshControl, ScrollView } from 'react-native'
 import { toast } from 'sonner-native'
 import { useShallow } from 'zustand/react/shallow'
 
-import lnbits from '@/api/lnbits'
-import CreditCard from '@/components/icons/CreditCard'
+import lnbits, { UnauthorizedError } from '@/api/lnbits'
 import Receive from '@/components/icons/Receive'
 import Send from '@/components/icons/Send'
 import MActionButton from '@/components/MActionButton'
@@ -149,7 +148,6 @@ export default function Lightning() {
             )
             queryClient.invalidateQueries({ queryKey: ['user'] })
             queryClient.invalidateQueries({ queryKey: ['payments'] })
-            queryClient.invalidateQueries({ queryKey: ['paginated-payments'] })
           })
           wsSubscriptions.current.set(wallet.inkey, ws)
         }
@@ -220,7 +218,8 @@ export default function Lightning() {
 
   useEffect(() => {
     async function handleUserError() {
-      if (userIsError && userError) {
+      // Only an expired session logs out, not network or server errors
+      if (userIsError && userError instanceof UnauthorizedError) {
         toast(t('errorSessionExpired'))
         await logout()
       }
@@ -266,12 +265,6 @@ export default function Lightning() {
             onPress={() => router.navigate('/camera')}
           >
             <Send />
-          </MActionButton>
-          <MActionButton
-            text={t('buy')}
-            onPress={() => router.navigate('/buy')}
-          >
-            <CreditCard width={16} height={16} active />
           </MActionButton>
         </MHStack>
         <MVStack>
@@ -354,7 +347,6 @@ export default function Lightning() {
                 {t('noTransactions')}
               </MText>
             )}
-            estimatedItemSize={60}
             refreshControl={
               <RefreshControl
                 refreshing={userIsFetching || paymentsIsFetching}

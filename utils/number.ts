@@ -1,11 +1,15 @@
+const MAX_DECIMAL_PLACES = 8
+
+/** Number of decimal places of a value, up to 8 (satoshi precision) */
 function getDecimalPlaces(value: number) {
   if (!isFinite(value) || Math.floor(value) === value) return 0
 
-  const valueString = value.toString()
+  // toFixed avoids exponent notation and floating point noise
+  const decimalPart = value
+    .toFixed(MAX_DECIMAL_PLACES)
+    .replace(/0+$/, '')
+    .split('.')[1]
 
-  if (valueString.includes('e')) return Number(valueString.split('-')[1])
-
-  const decimalPart = valueString.split('.')[1]
   return decimalPart ? decimalPart.length : 0
 }
 

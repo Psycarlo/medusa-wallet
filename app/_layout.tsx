@@ -6,24 +6,28 @@ import {
   QueryClient,
   QueryClientProvider
 } from '@tanstack/react-query'
-import * as NavigationBar from 'expo-navigation-bar'
 import * as Network from 'expo-network'
 import { Slot } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
 import * as SystemUI from 'expo-system-ui'
-import { Platform, StyleSheet } from 'react-native'
+import { useEffect } from 'react'
+import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { Toaster } from 'sonner-native'
 
+import MPrivacyOverlay from '@/components/MPrivacyOverlay'
 import useAppAuthentication from '@/hooks/useAppAuthentication'
 import { Colors } from '@/styles'
 
-NavigationBar.setBackgroundColorAsync(Colors.dark)
+// Hidden by useAppAuthentication once the first screen is decided
+SplashScreen.preventAutoHideAsync()
+SplashScreen.setOptions({ duration: 300, fade: true })
 
-if (Platform.OS === 'android') {
-  SystemUI.setBackgroundColorAsync(Colors.dark)
-}
-
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000 } }
+})
 
 onlineManager.setEventListener((setOnline) => {
   const eventSubscription = Network.addNetworkStateListener((state) => {
@@ -34,23 +38,31 @@ onlineManager.setEventListener((setOnline) => {
 
 export default function RootLayout() {
   useReactQueryDevTools(queryClient)
-  useAppAuthentication()
+  const { showPrivacyOverlay } = useAppAuthentication()
+
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(Colors.dark).catch(() => {})
+  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container}>
-        <Slot />
-        <Toaster
-          theme="dark"
-          position="bottom-center"
-          style={{
-            borderRadius: 8,
-            backgroundColor: Colors.grayDarkest,
-            borderWidth: 1,
-            borderColor: Colors.grayDarker
-          }}
-          duration={10_000}
-        />
+        <KeyboardProvider>
+          <StatusBar style="light" />
+          <Slot />
+          <Toaster
+            theme="dark"
+            position="bottom-center"
+            style={{
+              borderRadius: 8,
+              backgroundColor: Colors.grayDarkest,
+              borderWidth: 1,
+              borderColor: Colors.grayDarker
+            }}
+            duration={10_000}
+          />
+          {showPrivacyOverlay && <MPrivacyOverlay />}
+        </KeyboardProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   )

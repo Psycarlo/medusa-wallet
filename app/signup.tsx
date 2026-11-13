@@ -64,7 +64,7 @@ export default function Signup() {
 
   return (
     <>
-      <MMainLayout>
+      <MMainLayout avoidKeyboard>
         <MCenter>
           <MVStack gap="2xl">
             <MVStack gap="md">

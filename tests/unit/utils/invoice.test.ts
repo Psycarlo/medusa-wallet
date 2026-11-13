@@ -54,7 +54,7 @@ describe('invoice utils', () => {
 
   describe('decodeInvoice', () => {
     it('should decode lightning addresses', async () => {
-      const lnaddress1 = 'medusateste@wallet.medusa.bz'
+      const lnaddress1 = 'strayontology958@medusa.bz'
       const lnaddress2 = 'psycarlo@walletofsatoshi.com'
 
       const result1 = await decodeInvoice(lnaddress1)

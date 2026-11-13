@@ -14,7 +14,7 @@ export default function SSTimeAgoText({
   textProps
 }: MTimeAgoTextProps) {
   function timeFormatter(value: number, unit: string, suffix: string) {
-    if (unit === 'second') return `Few moments ago ${suffix}`
+    if (unit === 'second') return `Few moments ${suffix}`
     else if (unit === 'minute' || unit === 'hour')
       return `${value} ${unit}${value !== 1 ? 's' : ''} ${suffix}`
     else return `${formatDate(timestamp)} ${formatTime(timestamp)}`

@@ -3,6 +3,7 @@ import { FlashList } from '@shopify/flash-list'
 import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { z } from 'zod'
 
 import Close from '@/components/icons/Close'
@@ -28,6 +29,7 @@ import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Swaps() {
   const router = useRouter()
+  const { bottom: bottomInset } = useSafeAreaInsets()
   const queryClient = useQueryClient()
 
   const wallets = useWalletsStore((state) => state.wallets)
@@ -92,6 +94,7 @@ export default function Swaps() {
         {/* TODO Add loading */}
         <FlashList
           data={allSwaps}
+          contentContainerStyle={{ paddingBottom: bottomInset }}
           renderItem={({ item, index }) => {
             if (item.kind === 'auto') {
               return (
@@ -133,7 +136,6 @@ export default function Swaps() {
               />
             )
           }}
-          estimatedItemSize={20}
           ListEmptyComponent={() => (
             <MText color="muted" center>
               {t('noSwaps')}

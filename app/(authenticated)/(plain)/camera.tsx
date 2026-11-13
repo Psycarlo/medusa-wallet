@@ -12,6 +12,7 @@ import {
 } from 'expo-router'
 import { useCallback, useRef, useState } from 'react'
 import { Keyboard, StyleSheet, View } from 'react-native'
+import { toast } from 'sonner-native'
 
 import Close from '@/components/icons/Close'
 import MBottomSheet from '@/components/MBottomSheet'
@@ -20,7 +21,7 @@ import MCameraOverlay from '@/components/MCameraOverlay'
 import MIconButton from '@/components/MIconButton'
 import MText from '@/components/MText'
 import MTextInput from '@/components/MTextInput'
-import useHasInvoiceToPaste from '@/hooks/useHasInvoiceToPaste'
+import useClipboardInvoice from '@/hooks/useClipboardInvoice'
 import MFormLayout from '@/layouts/MFormLayout'
 import MHStack from '@/layouts/MHStack'
 import MMainLayout from '@/layouts/MMainLayout'
@@ -33,7 +34,7 @@ export default function Camera() {
   const router = useRouter()
   const { walletId } = useLocalSearchParams<CameraSearchParams>()
   const [permission, requestPermission] = useCameraPermissions()
-  const { hasInvoiceToPaste, invoiceValue } = useHasInvoiceToPaste()
+  const { canPaste, readInvoice } = useClipboardInvoice()
 
   const scanLocked = useRef(false)
   const typeBottomSheetRef = useRef<BottomSheetModal>(null)
@@ -52,12 +53,21 @@ export default function Camera() {
     })
   }
 
-  function handleOnPaste() {
-    if (!hasInvoiceToPaste) return
+  async function handleOnPaste() {
+    if (scanLocked.current) return
+    scanLocked.current = true
+
+    const invoice = await readInvoice()
+
+    if (!invoice) {
+      scanLocked.current = false
+      toast.error(t('errorNoInvoiceInClipboard'), { duration: 3000 })
+      return
+    }
 
     router.push({
       pathname: `/send`,
-      params: { walletId, invoice: invoiceValue }
+      params: { walletId, invoice }
     })
   }
 
@@ -68,7 +78,7 @@ export default function Camera() {
   )
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
+    <View style={StyleSheet.absoluteFill}>
       <Stack.Screen
         options={{
           headerTitle: () => (
@@ -85,7 +95,7 @@ export default function Camera() {
       />
       <CameraView
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onBarcodeScanned={handleOnBarcodeScanned}
       />
       <MCameraOverlay active={permission?.granted} />
@@ -125,7 +135,7 @@ export default function Camera() {
             />
             <MButton
               text={t('paste')}
-              disabled={!hasInvoiceToPaste}
+              disabled={!canPaste}
               onPress={handleOnPaste}
             />
           </MHStack>
@@ -139,6 +149,7 @@ export default function Camera() {
         <MFormLayout>
           <MFormLayout.Item>
             <MTextInput
+              inBottomSheet
               autoCapitalize="none"
               keyboardType="email-address"
               value={lnaddress}

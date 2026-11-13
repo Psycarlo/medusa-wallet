@@ -53,7 +53,7 @@ export default function Signin() {
 
   return (
     <>
-      <MMainLayout>
+      <MMainLayout avoidKeyboard>
         <MCenter>
           <MVStack gap="2xl">
             <MVStack gap="md">

@@ -10,13 +10,11 @@ function useFormatBitcoinUnit() {
 
   const getFormattedBitcoinUnitAmount = useCallback(
     (sats: number) => {
-      const decimals =
-        bitcoinUnit === 'btc'
-          ? number.getDecimalPlaces(sats / SATOSHIS_IN_BITCOIN)
-          : 0
-      return bitcoinUnit === 'btc'
-        ? formatNumber(sats / SATOSHIS_IN_BITCOIN, decimals)
-        : formatNumber(sats, 0, true)
+      if (bitcoinUnit !== 'btc') return formatNumber(sats, 0, true)
+
+      // Balances can hold fractions of a sat (fees are paid in msats)
+      const btc = Math.floor(sats) / SATOSHIS_IN_BITCOIN
+      return formatNumber(btc, number.getDecimalPlaces(btc))
     },
     [bitcoinUnit]
   )

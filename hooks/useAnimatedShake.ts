@@ -32,7 +32,7 @@ export const useAnimatedShake = () => {
     return {
       transform: [{ translateX: shakeTranslateX.value }]
     }
-  }, [])
+  })
 
   return { shake, shakeStyle }
 }

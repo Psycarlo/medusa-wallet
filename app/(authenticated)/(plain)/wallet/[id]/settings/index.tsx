@@ -49,7 +49,7 @@ export default function WalletSettings() {
 
   const [newWalletName, setNewWalletName] = useState(wallet?.name || '')
   const [walletColorId, setWalletColorId] = useState(
-    walletColors[wallet!.id].id
+    (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
   )
   const [hasChanges, setHasChanges] = useState(false)
   const [hasNameChanged, setHasNameChanged] = useState(false)
@@ -74,6 +74,9 @@ export default function WalletSettings() {
     onSuccess: () => {
       router.navigate('/')
       if (wallet) deleteWallet(wallet)
+    },
+    onError: () => {
+      toast.error(t('errorDeletingWallet'))
     }
   })
 
@@ -85,8 +88,10 @@ export default function WalletSettings() {
 
   function handleOnChangeNewWalletColorId(id: string) {
     setWalletColorId(id)
-    setHasChanges(id !== walletColors[wallet!.id].id)
-    setHasColorChanged(id !== walletColors[wallet!.id].id)
+    const currentColorId =
+      (wallet && walletColors[wallet.id]?.id) ?? WALLET_CARD_COLORS[0].id
+    setHasChanges(id !== currentColorId)
+    setHasColorChanged(id !== currentColorId)
   }
 
   function handleUpdateWallet() {
@@ -95,7 +100,7 @@ export default function WalletSettings() {
       const color = WALLET_CARD_COLORS.find(
         (_color) => _color.id === walletColorId
       )
-      if (color) updateWalletColor(wallet!.id, color)
+      if (color && wallet) updateWalletColor(wallet.id, color)
     }
     router.back()
   }
@@ -116,7 +121,7 @@ export default function WalletSettings() {
   if (!wallet) return <Redirect href="/" />
 
   return (
-    <MMainLayout withPaddingBottom>
+    <MMainLayout withPaddingBottom avoidKeyboard>
       <Stack.Screen
         options={{
           headerTitle: () => (

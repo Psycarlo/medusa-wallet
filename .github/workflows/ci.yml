@@ -2,14 +2,14 @@ name: CI
 
 on:
   pull_request:
-    branches: ['master']
+    branches: ['main']
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +21,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
+
+      - name: install
+        run: pnpm install --frozen-lockfile
+
+      - name: type check
+        run: pnpm type-check
 
       - name: test
         run: pnpm test

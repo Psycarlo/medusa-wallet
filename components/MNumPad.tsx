@@ -13,19 +13,7 @@ import MIconButton from './MIconButton'
 import MText from './MText'
 
 export type Keys =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 'DEL'
-  | ','
-  | 'BIOMETRIC'
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 'DEL' | ',' | 'BIOMETRIC'
 
 type BiometricTypes = 'faceid' | 'fingerprint' | 'iris' | undefined
 

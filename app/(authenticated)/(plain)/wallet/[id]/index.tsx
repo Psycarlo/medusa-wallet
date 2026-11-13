@@ -1,9 +1,9 @@
 import { FlashList } from '@shopify/flash-list'
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
 
-import CreditCard from '@/components/icons/CreditCard'
 import Ellipsis from '@/components/icons/Ellipsis'
 import Receive from '@/components/icons/Receive'
 import Send from '@/components/icons/Send'
@@ -26,6 +26,7 @@ import { formatNumber } from '@/utils/format'
 
 export default function Wallet() {
   const router = useRouter()
+  const { bottom: bottomInset } = useSafeAreaInsets()
   const { id } = useLocalSearchParams<WalletSearchParams>()
 
   const [wallet, walletColors, updateWalletColor] = useWalletsStore(
@@ -42,8 +43,8 @@ export default function Wallet() {
 
   // Update color on wallets created in lnbits dashboard
   useEffect(() => {
-    if (!walletColors[wallet!.id])
-      updateWalletColor(wallet!.id, WALLET_CARD_COLORS[0])
+    if (wallet && !walletColors[wallet.id])
+      updateWalletColor(wallet.id, WALLET_CARD_COLORS[0])
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!wallet) return <Redirect href="/" />
@@ -133,12 +134,6 @@ export default function Wallet() {
           >
             <Send />
           </MActionButton>
-          <MActionButton
-            text={t('buy')}
-            onPress={() => router.navigate('/buy')}
-          >
-            <CreditCard width={16} height={16} active />
-          </MActionButton>
         </MHStack>
         <MVStack style={{ flex: 1 }}>
           <MText size="lg" weight="bold">
@@ -146,6 +141,7 @@ export default function Wallet() {
           </MText>
           <FlashList
             data={wallet.transactions}
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
               <MTransactionCard
@@ -167,7 +163,6 @@ export default function Wallet() {
                 {t('noTransactions')}
               </MText>
             )}
-            estimatedItemSize={60}
           />
         </MVStack>
       </MVStack>

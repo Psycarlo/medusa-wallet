@@ -3,11 +3,10 @@
     "name": "Medusa Wallet",
     "slug": "medusa-wallet",
     "version": "0.3.0",
-    "newArchEnabled": false,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "medusa",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "bz.medusa.wallet"
@@ -19,11 +18,13 @@
       },
       "package": "bz.medusa.wallet",
       "permissions": ["android.permission.CAMERA"],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
       "versionCode": 3
-    },
-    "androidStatusBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#0A0A0A"
     },
     "web": {
       "bundler": "metro",
@@ -35,7 +36,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       "expo-secure-store",
@@ -53,18 +56,20 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
           "backgroundColor": "#0A0A0A"
         }
       ],
-      "expo-localization",
+      ["expo-status-bar", { "style": "light" }],
+      ["expo-navigation-bar", { "style": "light", "enforceContrast": false }],
       [
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
-      ],
-      "expo-web-browser"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

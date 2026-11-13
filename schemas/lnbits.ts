@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import { SUPPORTED_FIAT_CURRENCIES } from '@/config/fiat'
-
 export const ValidationErrorSchema = z.object({
   detail: z.union([
     z.array(
@@ -16,7 +14,7 @@ export const ValidationErrorSchema = z.object({
 })
 
 export const AuthSchema = z.object({
-  access_token: z.string().jwt()
+  access_token: z.jwt()
 })
 
 export const WalletSchema = z.object({
@@ -58,28 +56,17 @@ export const PaymentSchema = z.object({
   checking_id: z.string(),
   amount: z.number(),
   fee: z.number(),
-  memo: z.string(),
+  memo: z.string().nullish(),
   time: z.string(),
   bolt11: z.string(),
   preimage: z.string().optional().nullable(),
   payment_hash: z.string(),
   expiry: z.string().optional().nullable(),
-  object: z.record(z.any()).default({}),
+  object: z.record(z.string(), z.any()).default({}),
   wallet_id: z.string(),
   webhook: z.string().optional().nullable(),
   webhook_status: z.number().optional().nullable()
 })
-
-export const ConversionSchema = z
-  .object({
-    BTC: z.number(),
-    sats: z.number()
-  })
-  .and(
-    z
-      .record(z.enum(SUPPORTED_FIAT_CURRENCIES), z.number())
-      .refine((data) => Object.keys(data).length === 1)
-  )
 
 export const RateSchema = z.object({
   rate: z.number()
@@ -112,6 +99,12 @@ export const PayInvoiceSchema = z.object({
   payment_hash: z.string()
 })
 
+export const LnurlPayCallbackSchema = z.object({
+  pr: z.string().optional(),
+  status: z.string().optional(),
+  reason: z.string().optional()
+})
+
 export const LnurlSchema = z.object({
   lnurl: z.string()
 })
@@ -123,7 +116,7 @@ export const PaylinkSchema = z.array(
     description: z.string(),
     min: z.number(),
     max: z.number(),
-    username: z.string(),
+    username: z.string().nullish(),
     comment_chars: z.number(),
     lnurl: z.string()
   })

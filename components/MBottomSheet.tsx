@@ -1,10 +1,7 @@
-import BottomSheet, {
-  BottomSheetBackdrop,
-  type BottomSheetBackdropProps,
-  BottomSheetScrollView
-} from '@gorhom/bottom-sheet'
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { type BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types'
-import { type ForwardedRef, forwardRef, useCallback } from 'react'
+import { type ForwardedRef, forwardRef } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import MHStack from '@/layouts/MHStack'
 import MVStack from '@/layouts/MVStack'
@@ -12,6 +9,7 @@ import { Colors } from '@/styles'
 import { mainLayoutPaddingHorizontal } from '@/styles/layout'
 
 import Close from './icons/Close'
+import MBottomSheetBackdrop from './MBottomSheetBackdrop'
 import MIconButton from './MIconButton'
 import MText from './MText'
 
@@ -26,30 +24,23 @@ function MBottomSheet(
   { title, snapPoints = ['50%'], onClose, children }: MBottomSheetProps,
   ref: ForwardedRef<BottomSheetMethods>
 ) {
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-      />
-    ),
-    []
-  )
+  const { bottom: bottomInset } = useSafeAreaInsets()
 
   return (
     <BottomSheet
       ref={ref}
       index={-1}
       snapPoints={snapPoints}
-      backdropComponent={renderBackdrop}
+      backdropComponent={MBottomSheetBackdrop}
       enablePanDownToClose
+      keyboardBlurBehavior="restore"
       backgroundStyle={{ backgroundColor: Colors.grayDarkest }}
       handleStyle={{ display: 'none' }}
       onClose={onClose}
     >
       <BottomSheetScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: bottomInset + 16 }}
         style={{
           flex: 1,
           paddingTop: 16,

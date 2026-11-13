@@ -1,20 +1,20 @@
-import { MMKV } from 'react-native-mmkv'
+import { createMMKV } from 'react-native-mmkv'
 import { StateStorage } from 'zustand/middleware'
 
 const LAST_BACKGROUND_TIMESTAMP_KEY = 'lastBackgroundTimestamp'
 
-const storage = new MMKV({ id: 'mmkv.medusa' })
+const storage = createMMKV({ id: 'mmkv.medusa' })
 
 const mmkvStorage: StateStorage = {
   setItem: (name, value) => {
-    return storage.set(name, value)
+    storage.set(name, value)
   },
   getItem: (name) => {
     const value = storage.getString(name)
     return value ?? null
   },
   removeItem: (name) => {
-    return storage.delete(name)
+    storage.remove(name)
   }
 }
 
@@ -26,5 +26,4 @@ function getLastBackgroundTimestamp() {
   return storage.getNumber(LAST_BACKGROUND_TIMESTAMP_KEY) ?? null
 }
 
-export default mmkvStorage
 export { getLastBackgroundTimestamp, mmkvStorage, setLastBackgroundTimestamp }

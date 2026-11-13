@@ -27,7 +27,7 @@ function fromLnbitsPaymentToTransaction(
     id: lnbitsPayment.payment_hash,
     type: lnbitsPayment.amount > 0 ? 'in' : 'out',
     sats: Math.abs(lnbitsPayment.amount / 1000),
-    note: lnbitsPayment.memo,
+    note: lnbitsPayment.memo ?? undefined,
     timestamp: new Date(lnbitsPayment.time).getTime(),
     walletId: lnbitsPayment.wallet_id,
     bolt11: lnbitsPayment.bolt11,
@@ -38,7 +38,7 @@ function fromLnbitsPaymentToTransaction(
 function fromLnbitsPaylinkToPaylink(paylink: LnbitsPaylink): Paylink {
   return {
     id: paylink.id,
-    username: paylink.username,
+    username: paylink.username ?? '',
     min: paylink.min,
     max: paylink.max,
     commentChars: paylink.comment_chars,

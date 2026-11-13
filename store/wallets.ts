@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 import type { WalletCardColor } from '@/config/colors'
-import mmkvStorage from '@/storage/mmkv'
+import { mmkvStorage } from '@/storage/mmkv'
 import type { Paylink } from '@/types/paylink'
 import type { Unpacked } from '@/types/utils'
 import type { Wallet } from '@/types/wallet'

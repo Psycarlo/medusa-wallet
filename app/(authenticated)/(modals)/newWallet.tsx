@@ -48,7 +48,7 @@ export default function NewWallet() {
   })
 
   return (
-    <MMainLayout withPaddingBottom>
+    <MMainLayout withPaddingBottom avoidKeyboard>
       <MVStack itemsCenter justifyBetween>
         <MVStack gap="md">
           <MVStack gap="none">

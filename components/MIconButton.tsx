@@ -7,8 +7,7 @@ import {
   useMemo,
   useState
 } from 'react'
-import { type StyleProp, TouchableOpacity, type ViewStyle } from 'react-native'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, TouchableOpacity } from 'react-native'
 
 import { Colors } from '@/styles'
 
@@ -37,22 +36,12 @@ function MIconButton({
     })
   }, [children, isPressed])
 
-  const iconButtonStyles = useMemo<StyleProp<ViewStyle>>(() => {
-    return StyleSheet.compose(
-      {
-        ...styles.default,
-        ...(center ? styles.center : {})
-      },
-      style
-    )
-  }, [center, style])
-
   return (
     <TouchableOpacity
       activeOpacity={0.65}
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
-      style={iconButtonStyles}
+      style={[styles.default, center && styles.center, style]}
       {...props}
     >
       {noEnhanced ? children : enhancedChildren}

@@ -9,15 +9,17 @@ function useCreateAutoSwap(adminkey: string) {
   const router = useRouter()
 
   return useMutation({
-    mutationKey: ['createSwap'],
+    mutationKey: ['createAutoSwap'],
+    // Never queue a payment while offline to run it later
+    networkMode: 'always',
     mutationFn: (data: CreateAutoSwapData) =>
       lnbits.createAutoSwap(data, adminkey),
     onSuccess: () => {
       toast.success(t('createdAutoSwap'))
       router.navigate('/swaps')
     },
-    onError: () => {
-      toast.error(t('errorCreateAutoSwap'))
+    onError: (error) => {
+      toast.error(t('errorCreateAutoSwap'), { description: error.message })
     }
   })
 }
