@@ -1,4 +1,5 @@
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
+import * as LocalAuthentication from 'expo-local-authentication'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { BackHandler } from 'react-native'
@@ -54,7 +55,21 @@ export default function Unlock() {
   function handleOnKeyPress(key: Keys) {
     if (key === 'DEL') setPin((prev) => prev.slice(0, -1))
     else if (typeof key === 'number') setPin((prev) => `${prev}${key}`)
-    else if (key === 'BIOMETRIC') console.log('todo: handle biometric')
+    else if (key === 'BIOMETRIC') handleBiometric()
+  }
+
+  async function handleBiometric() {
+    const { success } = await LocalAuthentication.authenticateAsync({
+      disableDeviceFallback: true
+    })
+    if (success) unlock()
+  }
+
+  function unlock() {
+    setFailedOnce(false)
+    resetPinRetries()
+    setAuthTriggered(false)
+    router.replace('/')
   }
 
   useEffect(() => {
@@ -73,11 +88,7 @@ export default function Unlock() {
         return
       }
 
-      setFailedOnce(false)
-      resetPinRetries()
-      setAuthTriggered(false)
-
-      router.replace('/')
+      unlock()
     }
 
     handleValidatePin()

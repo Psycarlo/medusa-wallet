@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { Toaster } from 'sonner-native'
 
+import MPrivacyOverlay from '@/components/MPrivacyOverlay'
 import useAppAuthentication from '@/hooks/useAppAuthentication'
 import { Colors } from '@/styles'
 
@@ -24,7 +25,9 @@ import { Colors } from '@/styles'
 SplashScreen.preventAutoHideAsync()
 SplashScreen.setOptions({ duration: 300, fade: true })
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000 } }
+})
 
 onlineManager.setEventListener((setOnline) => {
   const eventSubscription = Network.addNetworkStateListener((state) => {
@@ -35,7 +38,7 @@ onlineManager.setEventListener((setOnline) => {
 
 export default function RootLayout() {
   useReactQueryDevTools(queryClient)
-  useAppAuthentication()
+  const { showPrivacyOverlay } = useAppAuthentication()
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(Colors.dark).catch(() => {})
@@ -58,6 +61,7 @@ export default function RootLayout() {
             }}
             duration={10_000}
           />
+          {showPrivacyOverlay && <MPrivacyOverlay />}
         </KeyboardProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
