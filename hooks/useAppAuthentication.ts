@@ -5,7 +5,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState, type AppStateStatus } from 'react-native'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ALLOWED_ENROLLED_LEVEL, LOCK_TIME } from '@/config/auth'
+import { ALLOWED_ENROLLED_LEVEL } from '@/config/auth'
+import { isBiometricEnabled, isPinEnabled } from '@/machines/appLock'
+import { isSignedIn, shouldLockAfterBackground } from '@/machines/session'
 import {
   getLastBackgroundTimestamp,
   setLastBackgroundTimestamp
@@ -14,7 +16,8 @@ import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 
 /**
- * Handles app authentication with PIN and BIOMETRIC.
+ * Handles app authentication with PIN and BIOMETRIC, moving the session
+ * between `signedIn` and `locked` (see `machines/session.ts`).
  *
  * The app only locks when the PIN is enabled and the user is logged in:
  * - on every cold start;
@@ -35,27 +38,20 @@ function useAppAuthentication() {
   const isAuthenticating = useRef(false)
   const [showPrivacyOverlay, setShowPrivacyOverlay] = useState(false)
 
-  const [pinEnabled, biometricEnabled] = useSettingsStore(
-    useShallow((state) => [state.pinEnabled, state.biometricEnabled])
+  const appLock = useSettingsStore((state) => state.appLock)
+  const [status, lock, unlock] = useAuthStore(
+    useShallow((state) => [state.status, state.lock, state.unlock])
   )
-  const [loggedOut, authTriggered, setAuthTriggered, resetPinRetries] =
-    useAuthStore(
-      useShallow((state) => [
-        state.loggedOut,
-        state.authTriggered,
-        state.setAuthTriggered,
-        state.resetPinRetries
-      ])
-    )
 
-  const requiresAuth = pinEnabled && !loggedOut
+  const biometricEnabled = isBiometricEnabled(appLock)
+  const requiresAuth = isPinEnabled(appLock) && isSignedIn(status)
 
   // `replace` keeps locked screens out of the history so the back button
   // can't return to them.
   const lockApp = useCallback(async () => {
     if (isAuthenticating.current) return
     isAuthenticating.current = true
-    setAuthTriggered(true)
+    lock()
 
     try {
       if (!biometricEnabled) {
@@ -86,8 +82,7 @@ function useAppAuthentication() {
       })
 
       if (authenticateResult.success) {
-        setAuthTriggered(false)
-        resetPinRetries()
+        unlock()
         router.replace('/')
       } else router.replace('/unlock')
     } catch {
@@ -95,7 +90,7 @@ function useAppAuthentication() {
     } finally {
       isAuthenticating.current = false
     }
-  }, [biometricEnabled, router, setAuthTriggered, resetPinRetries])
+  }, [biometricEnabled, router, lock, unlock])
 
   const handleAppStateChanged = useCallback(
     (nextAppState: AppStateStatus) => {
@@ -116,10 +111,9 @@ function useAppAuthentication() {
       if (isAuthenticating.current) return
 
       const elapsed = Date.now() - (getLastBackgroundTimestamp() || 0)
-      // A negative elapsed time means the device clock was moved back
-      if (elapsed >= LOCK_TIME || elapsed < 0 || authTriggered) lockApp()
+      if (shouldLockAfterBackground(status, elapsed)) lockApp()
     },
-    [requiresAuth, authTriggered, lockApp]
+    [requiresAuth, status, lockApp]
   )
 
   useEffect(() => {

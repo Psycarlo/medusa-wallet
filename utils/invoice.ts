@@ -7,6 +7,7 @@ import bolt11, { type Bolt11 } from './bolt11'
 const LIGHTNING_SCHEME = 'lightning'
 const BOLT11_SCHEME = 'lnbc'
 const LNURL_SCHEME = 'lnurl'
+const DEFAULT_INVOICE_EXPIRY = 60 * 60 // BOLT11 default, in seconds
 export const LIGHTNING_ADDRESS_REGEX = /\S+@\S+\.\S+/
 
 // `lightning:user@domain.com` -> `user@domain.com`
@@ -110,4 +111,19 @@ function normalizeInvoice(invoice: string) {
     .toLowerCase()
 }
 
-export { decodeInvoice, isValidInvoice, normalizeInvoice }
+/** Seconds a bolt11 invoice can be paid for, counting from its creation */
+function getInvoiceExpiry(invoice: string) {
+  try {
+    const expiry = bolt11
+      .decode(normalizeInvoice(invoice))
+      .data.tags.find((tag) => tag?.type === 'x')?.value
+
+    return typeof expiry === 'number' && expiry > 0
+      ? expiry
+      : DEFAULT_INVOICE_EXPIRY
+  } catch {
+    return DEFAULT_INVOICE_EXPIRY
+  }
+}
+
+export { decodeInvoice, getInvoiceExpiry, isValidInvoice, normalizeInvoice }

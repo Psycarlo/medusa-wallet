@@ -6,6 +6,7 @@ import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
 import { Colors } from '@/styles'
 import { formatDateTime, formatNumber } from '@/utils/format'
+import { isSwapTimedOut } from '@/utils/swap'
 
 import Inbound from './icons/Inbound'
 import Outbound from './icons/Outbound'
@@ -138,8 +139,7 @@ export default function MSwapCard({
             <MText
               weight="medium"
               color={
-                timeoutBlockHeight <= (currentBlockHeight || 0) &&
-                status === 'pending'
+                isSwapTimedOut(status, timeoutBlockHeight, currentBlockHeight)
                   ? 'danger'
                   : 'white'
               }

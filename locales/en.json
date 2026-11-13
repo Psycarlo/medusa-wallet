@@ -107,6 +107,7 @@
   "introDescription2": "and swap between Lightning and on-chain.",
   "introTitle1": "Your Lightning Wallet",
   "introTitle2": "With Zero KYC",
+  "invoiceExpired": "Invoice expired. Add an amount to create a new one.",
   "invoiceWillShowHere": "Invoice will show here",
   "language": "Language",
   "languages": {

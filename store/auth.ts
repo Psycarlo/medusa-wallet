@@ -2,52 +2,100 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 import { PIN_KEY, PIN_RETRIES } from '@/config/auth'
+import {
+  type LegacySessionFlags,
+  migrateLegacySession,
+  type SessionStatus,
+  sessionTransition
+} from '@/machines/session'
 import { getItem, setItem } from '@/storage/encrypted'
 import { mmkvStorage } from '@/storage/mmkv'
 
 type AuthState = {
-  firstTime: boolean
-  loggedOut: boolean
+  /** See `machines/session.ts` for the allowed transitions */
+  status: SessionStatus
   username: string
   email: string
   accessToken: string
-  newPin: string
   pinRetries: number
-  authTriggered: boolean
+  /** PIN being created, waiting for its confirmation. Never persisted. */
+  newPin: string
+}
+
+type PersistedAuthState = Omit<AuthState, 'newPin'>
+
+type SignInData = {
+  accessToken: AuthState['accessToken']
+  username?: AuthState['username']
+  email?: AuthState['email']
 }
 
 type AuthActions = {
-  setFirstTime: (firstTime: AuthState['firstTime']) => void
-  setLoggedOut: (loggedOut: AuthState['loggedOut']) => void
+  signIn: (data: SignInData) => void
+  signOut: () => void
+  lock: () => void
+  unlock: () => void
   setUsername: (username: AuthState['username']) => void
   setEmail: (email: AuthState['email']) => void
   setPin: (pin: string) => Promise<void>
   validatePin: (pin: string) => Promise<boolean>
-  setAccessToken: (accessToken: AuthState['accessToken']) => void
   setNewPin: (newPin: AuthState['newPin']) => void
   decrementPinRetries: () => void
   resetPinRetries: () => void
-  setAuthTriggered: (authTriggered: AuthState['authTriggered']) => void
-  logout: () => void
+}
+
+/** v0 stored the session as `firstTime`, `loggedOut` and `authTriggered` */
+function migrateAuthState(
+  persistedState: unknown,
+  version: number
+): PersistedAuthState {
+  const state = (persistedState ?? {}) as Partial<PersistedAuthState> &
+    LegacySessionFlags
+
+  return {
+    status: version < 1 ? migrateLegacySession(state) : state.status!,
+    username: state.username ?? '',
+    email: state.email ?? '',
+    accessToken: state.accessToken ?? '',
+    pinRetries: state.pinRetries ?? PIN_RETRIES
+  }
 }
 
 const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set, get) => ({
-      firstTime: true,
-      loggedOut: true,
+      status: 'onboarding',
       username: '',
       email: '',
-      password: '',
       accessToken: '',
-      newPin: '',
       pinRetries: PIN_RETRIES,
-      authTriggered: false,
-      setFirstTime: (firstTime) => {
-        set({ firstTime })
+      newPin: '',
+      signIn: ({ accessToken, username, email }) => {
+        const status = sessionTransition(get().status, 'SIGN_IN')
+        set({
+          status,
+          accessToken,
+          ...(username !== undefined && { username }),
+          ...(email !== undefined && { email })
+        })
       },
-      setLoggedOut: (loggedOut) => {
-        set({ loggedOut })
+      signOut: () => {
+        set({
+          status: sessionTransition(get().status, 'SIGN_OUT'),
+          accessToken: '',
+          username: '',
+          email: '',
+          pinRetries: PIN_RETRIES
+        })
+      },
+      lock: () => {
+        set({ status: sessionTransition(get().status, 'LOCK') })
+      },
+      unlock: () => {
+        set({
+          status: sessionTransition(get().status, 'UNLOCK'),
+          pinRetries: PIN_RETRIES
+        })
       },
       setUsername: (username) => {
         set({ username })
@@ -62,9 +110,6 @@ const useAuthStore = create<AuthState & AuthActions>()(
         const savedPin = await getItem(PIN_KEY)
         return pin === savedPin
       },
-      setAccessToken: (accessToken) => {
-        set({ accessToken })
-      },
       setNewPin: (newPin) => {
         set({ newPin })
       },
@@ -73,26 +118,22 @@ const useAuthStore = create<AuthState & AuthActions>()(
       },
       resetPinRetries: () => {
         set({ pinRetries: PIN_RETRIES })
-      },
-      setAuthTriggered: (authTriggered) => {
-        set({ authTriggered })
-      },
-      logout: () => {
-        set({
-          accessToken: '',
-          loggedOut: true,
-          username: '',
-          email: '',
-          pinRetries: PIN_RETRIES,
-          authTriggered: false
-        })
       }
     }),
     {
       name: 'medusa-auth',
-      storage: createJSONStorage(() => mmkvStorage)
+      storage: createJSONStorage(() => mmkvStorage),
+      version: 1,
+      migrate: migrateAuthState,
+      partialize: ({ status, username, email, accessToken, pinRetries }) => ({
+        status,
+        username,
+        email,
+        accessToken,
+        pinRetries
+      })
     }
   )
 )
 
-export { useAuthStore }
+export { migrateAuthState, useAuthStore }

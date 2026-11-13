@@ -2,6 +2,7 @@ import { type WellKnown } from '@/types/lnaddress'
 import { type Bolt11 } from '@/utils/bolt11'
 import {
   decodeInvoice,
+  getInvoiceExpiry,
   isValidInvoice,
   normalizeInvoice
 } from '@/utils/invoice'
@@ -141,6 +142,24 @@ describe('invoice utils', () => {
         'lnurl1dp68gurn8ghj7ampd3kx2apwd4jkgatnvyhxy730d3h82unvwqhnj6z5vfvhs7yrg52'
       )
       expect(normalizeInvoice(lnaddress)).toBe('medusateste@medusa.bz')
+    })
+  })
+
+  describe('getInvoiceExpiry', () => {
+    it('should read the expiry of an invoice in seconds', () => {
+      const oneHour =
+        'lnbc11110n1pnuyegnpp5r84euexg8cyypnjaq202dl5atyrutnpdf5493f44e0ux5cxdq3jsdq2gdshymr0wvcqzzsxqrrsssp52p9ywkyn0p9ladqvy990uqk460s42kscetzqr45g6dx688eaf4ks9p4gqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqysgqewzrkt0f3cntp33qnn847frct0n5xydytwkh6zke6dt8j440m0kqgne5y88zpq5hyukcz4urrs04v92nrkehgxdlh2qq0tjqfqknm9gq7ud67s'
+      const oneDay =
+        'LNBC1171400N1PN7CAEMPP54G74L06KWRHMKZ3DLRWL5DNC6669X4JN9KWLZT7X3FUWE3FT4GFQDQQCQZZSXQYZ5VQSP5ST48PCXNP9PK86VMDSY4GPCU50VTUC04MXXGUUZXDVG7XAFXNT9S9QXPQYSGQ554NL9EHFQR908M4K7STSFRN5Y0HVQX3344DYCKRZ2E8YRFQHWU39A0HN5L8GK25Y2RNMWD4CVWGKKTVMC96LSDEV5MAM6P9T7G46KQQYV2740'
+
+      expect(getInvoiceExpiry(oneHour)).toBe(60 * 60)
+      expect(getInvoiceExpiry(`lightning:${oneHour}`)).toBe(60 * 60)
+      expect(getInvoiceExpiry(oneDay)).toBe(24 * 60 * 60)
+    })
+
+    it('should default to one hour', () => {
+      expect(getInvoiceExpiry('')).toBe(60 * 60)
+      expect(getInvoiceExpiry('not an invoice')).toBe(60 * 60)
     })
   })
 })

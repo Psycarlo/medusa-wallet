@@ -27,6 +27,7 @@ import useLogout from '@/hooks/useLogout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
+import { isBiometricEnabled, isPinEnabled } from '@/machines/appLock'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import { useWalletsStore } from '@/store/wallets'
@@ -46,8 +47,8 @@ import { getPaylinkAddress } from '@/utils/medusa'
 export default function Settings() {
   const router = useRouter()
   const { bottom: bottomInset } = useSafeAreaInsets()
-  const [username, email] = useAuthStore(
-    useShallow((state) => [state.username, state.email])
+  const [username, email, setPin] = useAuthStore(
+    useShallow((state) => [state.username, state.email, state.setPin])
   )
   const paylinkUsername = useWalletsStore((state) => state.paylink?.username)
 
@@ -55,27 +56,25 @@ export default function Settings() {
     language,
     bitcoinUnit,
     fiatCurrency,
-    pinEnabled,
-    biometricEnabled,
+    appLock,
     lnbitsUrl,
     displayLowValuePercentage,
-    setPinEnabled,
-    setBiometricEnabled,
+    updateAppLock,
     setDisplayLowValuePercentage
   ] = useSettingsStore(
     useShallow((state) => [
       state.language,
       state.bitcoinUnit,
       state.fiatCurrency,
-      state.pinEnabled,
-      state.biometricEnabled,
+      state.appLock,
       state.lnbitsUrl,
       state.displayLowValuePercentage,
-      state.setPinEnabled,
-      state.setBiometricEnabled,
+      state.updateAppLock,
       state.setDisplayLowValuePercentage
     ])
   )
+  const pinEnabled = isPinEnabled(appLock)
+  const biometricEnabled = isBiometricEnabled(appLock)
   const logout = useLogout()
   const { hasBiometric, biometricAuth } = useBiometric()
 
@@ -98,15 +97,15 @@ export default function Settings() {
     else if (pinEnabled && hasBiometric && biometricEnabled) {
       const biometricAuthSuccess = await biometricAuth()
       if (biometricAuthSuccess) {
-        setPinEnabled(false)
-        setBiometricEnabled(false)
+        await setPin('')
+        updateAppLock('PIN_REMOVED')
       }
     } else if (pinEnabled && (!hasBiometric || !biometricEnabled))
       router.push({ pathname: '/validatePin', params: { type: 'disable-pin' } })
   }
 
   function handleToggleBiometric() {
-    if (biometricEnabled) setBiometricEnabled(false)
+    if (biometricEnabled) updateAppLock('BIOMETRIC_DISABLED')
     else
       router.push({
         pathname: '/validatePin',

@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { z } from 'zod'
 
 import Close from '@/components/icons/Close'
 import Refresh from '@/components/icons/Refresh'
@@ -22,9 +21,9 @@ import MFormLayout from '@/layouts/MFormLayout'
 import MMainLayout from '@/layouts/MMainLayout'
 import MVStack from '@/layouts/MVStack'
 import { t } from '@/locales'
-import { SwapSchema } from '@/schemas/lnbits'
 import { useWalletsStore } from '@/store/wallets'
 import { formatNumber } from '@/utils/format'
+import { isSwapTimedOut } from '@/utils/swap'
 import { getDefaultWallet } from '@/utils/wallet'
 
 export default function Swaps() {
@@ -46,12 +45,13 @@ export default function Swaps() {
     ...(swaps?.map((s) => ({ ...s, kind: 'normal' as const })) || [])
   ]
 
-  const [selectedSwap, setSelectedSwap] = useState<z.infer<typeof SwapSchema>>()
+  // Only the id is kept: the details always show the latest swap data
+  const [selectedSwapId, setSelectedSwapId] = useState<string>()
+  const selectedSwap = swaps?.find((swap) => swap.id === selectedSwapId)
   const bottomSheetOnchainDetailsRef = useRef<BottomSheet>(null)
 
   function handleSelectSwap(id: string) {
-    const swap = swaps?.find((swap) => swap.id === id)
-    if (swap) setSelectedSwap(swap)
+    setSelectedSwapId(id)
     bottomSheetOnchainDetailsRef.current?.expand()
   }
 
@@ -150,13 +150,16 @@ export default function Swaps() {
       >
         {selectedSwap && (
           <MVStack itemsCenter>
-            {selectedSwap.timeout_block_height <= (blockHeight || 0) &&
-              selectedSwap.status === 'pending' && (
-                <MText size="sm" color="danger">
-                  {t('timeoutReached')}
-                </MText>
-              )}
-            {selectedSwap && <MQRCode value={selectedSwap.address || ''} />}
+            {isSwapTimedOut(
+              selectedSwap.status,
+              selectedSwap.timeout_block_height,
+              blockHeight
+            ) && (
+              <MText size="sm" color="danger">
+                {t('timeoutReached')}
+              </MText>
+            )}
+            <MQRCode value={selectedSwap.address || ''} />
             {selectedSwap.expected_amount && (
               <MText color="muted" size="sm">
                 {t('boltzFee', {
