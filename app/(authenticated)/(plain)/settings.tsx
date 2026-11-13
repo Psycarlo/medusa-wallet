@@ -161,7 +161,7 @@ export default function Settings() {
                 <MSettingsCard.Item>
                   <MSettingsCard.Label
                     title={t('yourLightningAddress')}
-                    value={getPaylinkAddress(paylinkUsername)}
+                    value={getPaylinkAddress(paylinkUsername, lnbitsUrl)}
                   />
                 </MSettingsCard.Item>
               )}

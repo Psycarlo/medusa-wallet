@@ -57,8 +57,12 @@ export default function Receive() {
     useShallow((state) => [state.wallets, state.paylink])
   )
   const rate = useFiatStore((state) => state.rate)
-  const [fiatCurrency, bitcoinUnit] = useSettingsStore(
-    useShallow((state) => [state.fiatCurrency, state.bitcoinUnit])
+  const [fiatCurrency, bitcoinUnit, lnbitsUrl] = useSettingsStore(
+    useShallow((state) => [
+      state.fiatCurrency,
+      state.bitcoinUnit,
+      state.lnbitsUrl
+    ])
   )
   const defaultWallet = walletId ? isDefaultWallet(walletId, wallets) : true
 
@@ -259,7 +263,7 @@ export default function Receive() {
             <MAddressCopy
               address={
                 request.type === 'address' && paylink
-                  ? getPaylinkAddress(paylink.username)
+                  ? getPaylinkAddress(paylink.username, lnbitsUrl)
                   : qrCodeValue
               }
               noFormat={!isInvoice}

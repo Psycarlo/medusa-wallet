@@ -1,4 +1,4 @@
-import { getHistoricalPricesMap } from '@/utils/medusa'
+import { getHistoricalPricesMap, getPaylinkAddress } from '@/utils/medusa'
 
 describe('medusa utils', () => {
   describe('getHistoricalPricesMap', () => {
@@ -13,6 +13,23 @@ describe('medusa utils', () => {
 
       expect(getHistoricalPricesMap(entries)[100]).toEqual(['1', '2', '4'])
       expect(getHistoricalPricesMap(entries)[1000]).toEqual(['3', '5'])
+    })
+  })
+
+  describe('getPaylinkAddress', () => {
+    it('should use the medusa domain for the default lnbits server', () => {
+      expect(getPaylinkAddress('satoshi', 'https://wallet.medusa.bz')).toBe(
+        'satoshi@medusa.bz'
+      )
+      expect(getPaylinkAddress('satoshi', 'https://wallet.medusa.bz/')).toBe(
+        'satoshi@medusa.bz'
+      )
+    })
+
+    it('should use the host of any other lnbits server', () => {
+      expect(getPaylinkAddress('satoshi', 'https://lnbits.example.com/')).toBe(
+        'satoshi@lnbits.example.com'
+      )
     })
   })
 })

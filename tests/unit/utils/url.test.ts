@@ -1,4 +1,4 @@
-import { normalizeBaseUrl } from '@/utils/url'
+import { getHost, normalizeBaseUrl } from '@/utils/url'
 
 describe('url utils', () => {
   describe('normalizeBaseUrl', () => {
@@ -21,6 +21,16 @@ describe('url utils', () => {
       expect(normalizeBaseUrl('https://wallet.medusa.bz')).toBe(
         'https://wallet.medusa.bz'
       )
+    })
+  })
+
+  describe('getHost', () => {
+    it('should return the host of a url', () => {
+      expect(getHost('https://lnbits.example.com')).toBe('lnbits.example.com')
+      expect(getHost('https://lnbits.example.com/lnbits/')).toBe(
+        'lnbits.example.com'
+      )
+      expect(getHost('http://192.168.1.10:5000?x=1')).toBe('192.168.1.10:5000')
     })
   })
 })

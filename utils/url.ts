@@ -6,4 +6,11 @@ function normalizeBaseUrl(url: string) {
   return url.trim().replace(/\/+$/, '')
 }
 
-export { normalizeBaseUrl }
+/** `https://lnbits.example.com/path` -> `lnbits.example.com` */
+function getHost(url: string) {
+  return normalizeBaseUrl(url)
+    .replace(/^[a-z][a-z0-9+.-]*:\/\//i, '')
+    .split(/[/?#]/)[0]
+}
+
+export { getHost, normalizeBaseUrl }
