@@ -73,6 +73,9 @@ export default function MTransactionCard({
                   {fiatUtils.getSymbol(fiat)}
                   {'  '}
                   {(() => {
+                    // Unknown current rate: there is nothing to compare with
+                    if (!currentFiatPrice) return ''
+
                     const totalGain = Math.abs(
                       transaction.fiatSnapshot[fiat] - currentFiatPrice
                     )

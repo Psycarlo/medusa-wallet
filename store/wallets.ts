@@ -13,7 +13,6 @@ type WalletsState = {
   walletColors: Record<Wallet['id'], WalletCardColor>
   selectedWalletId: Wallet['id'] | null
   totalBalance: number
-  totalFiat: number
   paylink?: Paylink
 }
 
@@ -31,7 +30,6 @@ type WalletsActions = {
     selectedWalletId: WalletsState['selectedWalletId']
   ) => void
   setTotalBalance: (totalBalance: WalletsState['totalBalance']) => void
-  setTotalFiat: (totalFiat: WalletsState['totalFiat']) => void
   setTransactions: (transactions: NonNullable<Wallet['transactions']>[]) => void
   setPaylink: (paylink: NonNullable<WalletsState['paylink']>) => void
 }
@@ -41,7 +39,6 @@ const initialState: WalletsState = {
   walletColors: {},
   selectedWalletId: null,
   totalBalance: 0,
-  totalFiat: 0,
   paylink: undefined
 }
 
@@ -105,10 +102,7 @@ const useWalletsStore = create<WalletsState & WalletsActions>()(
         set({ selectedWalletId })
       },
       setTotalBalance: (totalBalance) => {
-        set({ totalBalance, ...(totalBalance === 0 && { totalFiat: 0 }) })
-      },
-      setTotalFiat: (totalFiat) => {
-        set({ totalFiat })
+        set({ totalBalance })
       },
       setTransactions: (transactions) => {
         set(

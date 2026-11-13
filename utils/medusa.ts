@@ -1,4 +1,7 @@
+import { LNBITS_DEFAULT_URL } from '@/config/lnbits'
 import { HISTORICAL_PRICES_INTERVAL, MEDUSA_URL } from '@/config/medusa'
+
+import { getHost, normalizeBaseUrl } from './url'
 
 type HistoricalPriceEntry = {
   id: string
@@ -21,8 +24,17 @@ function getHistoricalPricesMap(entries: HistoricalPriceEntry[]) {
   return result
 }
 
-function getPaylinkAddress(username: string) {
-  return `${username}@${MEDUSA_URL}`
+/**
+ * Lightning address of a paylink. LNbits serves them on its own host, except
+ * the default server, whose addresses live on the Medusa domain.
+ */
+function getPaylinkAddress(username: string, lnbitsUrl: string) {
+  const domain =
+    normalizeBaseUrl(lnbitsUrl) === LNBITS_DEFAULT_URL
+      ? MEDUSA_URL
+      : getHost(lnbitsUrl)
+
+  return `${username}@${domain}`
 }
 
 export { getHistoricalPricesMap, getPaylinkAddress }

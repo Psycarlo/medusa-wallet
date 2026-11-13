@@ -1,3 +1,4 @@
+import { MAX_PRICE_TIME_DIFFERENCE } from '@/config/medusa'
 import { SATOSHIS_IN_BITCOIN } from '@/constants/btc'
 import { TimestampPriceSchema } from '@/schemas/medusa'
 
@@ -13,6 +14,7 @@ const headers = {
   Authorization: `Basic ${credentials}`
 }
 
+/** Bitcoin price in every supported fiat currency at `timestamp` (seconds) */
 async function getBitcoinPricesAt(timestamp: number) {
   const response = await fetch(
     `${API_URL}/btcPriceAll?unix_time=${timestamp}`,
@@ -27,28 +29,19 @@ async function getBitcoinPricesAt(timestamp: number) {
 
   const data = TimestampPriceSchema.parse(json)
 
+  if (Math.abs(data.unix_time - timestamp) > MAX_PRICE_TIME_DIFFERENCE)
+    throw new Error('No bitcoin price for that time')
+
   return data.bitcoin
 }
 
 async function getPricesAt(sats: number, timestamp: number) {
-  const response = await fetch(
-    `${API_URL}/btcPriceAll?unix_time=${timestamp}`,
-    {
-      headers,
-      method: 'GET'
-    }
-  )
-  const json = await response.json()
+  const prices = await getBitcoinPricesAt(timestamp)
 
-  const data = TimestampPriceSchema.parse(json)
-
-  const prices = data.bitcoin
-  for (const fiat in data.bitcoin) {
-    prices[fiat as keyof typeof data.bitcoin] = Number(
-      (
-        (sats / SATOSHIS_IN_BITCOIN) *
-        data.bitcoin[fiat as keyof typeof data.bitcoin]
-      ).toFixed(2)
+  for (const fiat in prices) {
+    const currency = fiat as keyof typeof prices
+    prices[currency] = Number(
+      ((sats / SATOSHIS_IN_BITCOIN) * prices[currency]).toFixed(2)
     )
   }
 

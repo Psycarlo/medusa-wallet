@@ -5,6 +5,7 @@ import { t } from '@/locales'
 import { isSignedIn } from '@/machines/session'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
+import { normalizeBaseUrl } from '@/utils/url'
 
 import useLogout from './useLogout'
 
@@ -14,7 +15,8 @@ function useTrySetLnbitsUrl() {
   const [loading, setLoading] = useState(false)
 
   const trySetLnbitsUrl = useCallback(
-    async (newLnbitsUrl: string) => {
+    async (lnbitsUrl: string) => {
+      const newLnbitsUrl = normalizeBaseUrl(lnbitsUrl)
       // Read current values: this callback is created once
       if (newLnbitsUrl === useSettingsStore.getState().lnbitsUrl) return
       setLoading(true)
