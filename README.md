@@ -42,6 +42,11 @@ The `android` and `ios` folders are generated from `app.json` by
 are not committed. Run `npx expo prebuild --clean` after changing native
 config or dependencies.
 
+## Architecture
+
+[AGENTS.md](AGENTS.md) describes the project layout, the checks CI runs and the
+state machines (session, app lock, PIN entry and receive) in `machines/`.
+
 ## Dev Tools
 
 Read more about React Query Dev Tools [here](https://docs.expo.dev/debugging/devtools-plugins/#react-query)
