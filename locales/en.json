@@ -87,6 +87,7 @@
   "errorCreateSwap": "Error while trying to create swap. Check if you have sufficient balance.",
   "errorDeletingAutoSwap": "Error trying to delete auto swap",
   "errorInvoiceDecode": "Unable to decode this lightning invoice",
+  "errorNoInvoiceInClipboard": "No lightning invoice or address in your clipboard",
   "errorPayment": "Payment error",
   "errorSessionExpired": "Your session has expired. Please log in again",
   "errorWalletNotFound": "Wallet not found",

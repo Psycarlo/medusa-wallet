@@ -87,6 +87,7 @@
   "errorCreateSwap": "Erro ao tentar criar troca. Verifica se tens sats suficientes.",
   "errorDeletingAutoSwap": "Erro ao tentar eliminar troca automática",
   "errorInvoiceDecode": "Não foi possível descodificar este lightning invoice",
+  "errorNoInvoiceInClipboard": "Não há fatura ou endereço lightning na área de transferência",
   "errorPayment": "Erro ao tentar fazer o pagamento",
   "errorSessionExpired": "A sessão expirou. Por favor inicie sessão novamente",
   "errorWalletNotFound": "Carteira não encontrada",
