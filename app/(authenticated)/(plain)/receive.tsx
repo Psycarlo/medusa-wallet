@@ -43,7 +43,8 @@ import { getDefaultWallet, isDefaultWallet } from '@/utils/wallet'
 
 // If no walletId is provided, the default wallet will be used
 // If is the default wallet, we display the paylink lnurl
-// If is not the default wallet, an amount is needed to display a bolt11
+// If is not the default wallet, or the account has no paylink (e.g. created
+// outside Medusa), an amount is needed to display a bolt11
 // If is the default wallet and user wants to add amount, we display
 // bolt11 with that amount (and label if provided)
 // A paid or expired bolt11 is replaced by the above (see machines/receive.ts)
@@ -207,7 +208,7 @@ export default function Receive() {
     bottomSheetCommentRef.current?.close()
   }
 
-  if (!currentWallet || !paylink) return <Redirect href="/" />
+  if (!currentWallet) return <Redirect href="/" />
 
   return (
     <MMainLayout withPaddingTop withPaddingBottom>
@@ -248,7 +249,7 @@ export default function Receive() {
             <MQRCode
               value={qrCodeValue}
               loading={createInvoiceMutation.isPending}
-              placeholder={!defaultWallet}
+              placeholder={request.type === 'empty'}
             />
           </MFormLayout.Item>
           <MFormLayout.Item>
@@ -257,7 +258,9 @@ export default function Receive() {
             />
             <MAddressCopy
               address={
-                isInvoice ? qrCodeValue : getPaylinkAddress(paylink.username)
+                request.type === 'address' && paylink
+                  ? getPaylinkAddress(paylink.username)
+                  : qrCodeValue
               }
               noFormat={!isInvoice}
               placeholder={t('invoiceWillShowHere')}
