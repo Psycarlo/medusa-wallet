@@ -2,11 +2,9 @@
 
 ![Hero](hero.png)
 
-Apps features [here](FEATURES.md)
-
 # Development Requirements
 
-- Node
+- Node 22 or 24
 - Pnpm
 - Android Studio / XCode
 
@@ -38,6 +36,11 @@ pnpm install
 pnpm ios
 pnpm android
 ```
+
+The `android` and `ios` folders are generated from `app.json` by
+[prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) and
+are not committed. Run `npx expo prebuild --clean` after changing native
+config or dependencies.
 
 ## Dev Tools
 
