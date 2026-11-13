@@ -35,13 +35,15 @@ import { getHistoricalPricesMap } from '@/utils/medusa'
 import parse from '@/utils/parse'
 import { generateRandomAddress } from '@/utils/random'
 import { tryCatch } from '@/utils/tryCatch'
+import { normalizeBaseUrl } from '@/utils/url'
 
 import medusa from './medusa'
 
 const headers = { 'Content-Type': 'application/json' }
 
+// Normalized here too: URLs saved with a trailing slash by older versions
 function getCurrentBaseUrl() {
-  return useSettingsStore.getState().lnbitsUrl
+  return normalizeBaseUrl(useSettingsStore.getState().lnbitsUrl)
 }
 
 // User-level endpoints (wallet create/delete, auth) require the access token
