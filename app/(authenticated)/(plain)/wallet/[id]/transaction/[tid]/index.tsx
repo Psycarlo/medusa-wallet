@@ -66,13 +66,7 @@ export default function Transaction() {
               <MText color="muted">{t('snapshotAmount')}</MText>
               <MText size="lg" weight="medium">
                 {fiat.getSymbol(fiatCurrency)}
-                {formatNumber(
-                  (rate &&
-                    transaction.fiatSnapshot &&
-                    transaction.fiatSnapshot[fiatCurrency]) ||
-                    0 / rate,
-                  2
-                )}
+                {formatNumber(transaction.fiatSnapshot?.[fiatCurrency] ?? 0, 2)}
               </MText>
             </MVStack>
             <MVStack itemsCenter style={{ flex: 1, width: '50%' }}>
