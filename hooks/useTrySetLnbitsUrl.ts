@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner-native'
-import { useShallow } from 'zustand/react/shallow'
 
 import { t } from '@/locales'
 import { useAuthStore } from '@/store/auth'
@@ -10,15 +9,13 @@ import useLogout from './useLogout'
 
 function useTrySetLnbitsUrl() {
   const logout = useLogout()
-  const [lnbitsUrl, setLnbitsUrl] = useSettingsStore(
-    useShallow((state) => [state.lnbitsUrl, state.setLnbitsUrl])
-  )
+  const setLnbitsUrl = useSettingsStore((state) => state.setLnbitsUrl)
   const [loading, setLoading] = useState(false)
-  const loggedOut = useAuthStore((state) => state.loggedOut)
 
   const trySetLnbitsUrl = useCallback(
     async (newLnbitsUrl: string) => {
-      if (newLnbitsUrl === lnbitsUrl) return
+      // Read current values: this callback is created once
+      if (newLnbitsUrl === useSettingsStore.getState().lnbitsUrl) return
       setLoading(true)
       try {
         const response = await fetch(newLnbitsUrl, {
@@ -32,7 +29,7 @@ function useTrySetLnbitsUrl() {
           throw new Error('Unable to connect to the lnbits server')
 
         setLnbitsUrl(newLnbitsUrl)
-        if (!loggedOut) await logout()
+        if (!useAuthStore.getState().loggedOut) await logout()
         toast.success(t('lnbitsUrlChangeSuccess'))
       } catch {
         toast.error(t('lnbitsUrlChangeError'))
