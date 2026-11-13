@@ -14,6 +14,7 @@ import * as SystemUI from 'expo-system-ui'
 import { useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { Toaster } from 'sonner-native'
 
 import useAppAuthentication from '@/hooks/useAppAuthentication'
@@ -42,19 +43,21 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container} onLayout={handleLayout}>
-        <StatusBar style="light" />
-        <Slot />
-        <Toaster
-          theme="dark"
-          position="bottom-center"
-          style={{
-            borderRadius: 8,
-            backgroundColor: Colors.grayDarkest,
-            borderWidth: 1,
-            borderColor: Colors.grayDarker
-          }}
-          duration={10_000}
-        />
+        <KeyboardProvider>
+          <StatusBar style="light" />
+          <Slot />
+          <Toaster
+            theme="dark"
+            position="bottom-center"
+            style={{
+              borderRadius: 8,
+              backgroundColor: Colors.grayDarkest,
+              borderWidth: 1,
+              borderColor: Colors.grayDarker
+            }}
+            duration={10_000}
+          />
+        </KeyboardProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   )

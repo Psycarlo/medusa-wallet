@@ -1,3 +1,4 @@
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
 import { type ForwardedRef, forwardRef, useMemo, useState } from 'react'
 import {
   type StyleProp,
@@ -14,10 +15,19 @@ import { Colors, Typography } from '@/styles'
 import Eye from './icons/Eye'
 import EyeOff from './icons/EyeOff'
 
-type MTextInputProps = React.ComponentPropsWithoutRef<typeof TextInput>
+type MTextInputProps = React.ComponentPropsWithoutRef<typeof TextInput> & {
+  /** Lets the parent bottom sheet move above the keyboard */
+  inBottomSheet?: boolean
+}
 
 function MTextInput(
-  { style, secureTextEntry, maxLength, ...props }: MTextInputProps,
+  {
+    style,
+    secureTextEntry,
+    maxLength,
+    inBottomSheet = false,
+    ...props
+  }: MTextInputProps,
   ref: ForwardedRef<TextInputInstance>
 ) {
   const [isSecure, setIsSecure] = useState(!!secureTextEntry)
@@ -31,9 +41,13 @@ function MTextInput(
     )
   }, [style])
 
+  const Input = (
+    inBottomSheet ? BottomSheetTextInput : TextInput
+  ) as typeof TextInput
+
   return (
     <View style={styles.containerBase}>
-      <TextInput
+      <Input
         ref={ref}
         secureTextEntry={isSecure}
         maxLength={maxLength}

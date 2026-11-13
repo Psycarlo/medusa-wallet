@@ -36,6 +36,7 @@ function LnbitsUrlSheet(_: any, ref: ForwardedRef<BottomSheetMethods>) {
       onClose={() => setLocalLnbitsUrl(lnbitsUrl)}
     >
       <MTextInput
+        inBottomSheet
         autoCapitalize="none"
         keyboardType="url"
         value={localLnbitsUrl}
